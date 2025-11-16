@@ -26,9 +26,9 @@ lynis audit system | tee "$LYNIS_LOG"
 
 echo -e "${GREEN}✓ Lynis audit complete. Results saved to ${LYNIS_LOG}.${RESET}"
 
-read -rp "Do you want to schedule Lynis via CRON? (y/n): " SCHEDULE_CRON
+prompt_yes_no "Do you want to schedule Lynis via CRON?" "Y"
 
-if [[ "${SCHEDULE_CRON,,}" == "y" ]]; then
+if [[ "$REPLY" == "Y" ]]; then
   read -rp "Enter CRON schedule (minute hour day month day_of_week) or leave empty for default (0 4 * * *): " CRON_PATTERN
   CRON_PATTERN="${CRON_PATTERN:-0 4 * * *}"  # Default: daily at 4:00 AM
   CRON_CMD="lynis audit system | tee -a $LYNIS_LOG"

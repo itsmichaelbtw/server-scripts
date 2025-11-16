@@ -41,14 +41,8 @@ for i in 1 2 3; do
   done
 done
 
-while true; do
-  read -rp "Enable knockd daemon at boot? (y/n): " DAEMON_INPUT
-  case "$DAEMON_INPUT" in
-    y|Y) ENABLE_DAEMON="yes"; break ;;
-    n|N) ENABLE_DAEMON="no"; break ;;
-    *) echo "Enter y or n." ;;
-  esac
-done
+prompt_yes_no "Enable knockd daemon at boot?" "Y"
+ENABLE_DAEMON=$(echo "$REPLY" | tr 'YN' 'yn')
 
 TEMPLATE_FILE="$SCRIPT_DIR/knockd.conf.template"
 TARGET_FILE="/etc/knockd.conf"

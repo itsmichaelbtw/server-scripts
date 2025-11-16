@@ -26,9 +26,9 @@ chkrootkit | tee "$CHK_LOG"
 
 echo -e "${GREEN}✓ Chkrootkit scan complete. Results saved to ${CHK_LOG}.${RESET}"
 
-read -rp "Do you want to schedule Chkrootkit via CRON? (y/n): " SCHEDULE_CRON
+prompt_yes_no "Do you want to schedule Chkrootkit via CRON?" "Y"
 
-if [[ "${SCHEDULE_CRON,,}" == "y" ]]; then
+if [[ "$REPLY" == "Y" ]]; then
   read -rp "Enter CRON schedule (minute hour day month day_of_week) or leave empty for default (0 3 * * *): " CRON_PATTERN
   CRON_PATTERN="${CRON_PATTERN:-0 3 * * *}"  # Default: daily at 3:00 AM
   CRON_CMD="chkrootkit | tee -a $CHK_LOG"

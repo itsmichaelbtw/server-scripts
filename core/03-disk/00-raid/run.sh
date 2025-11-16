@@ -39,9 +39,9 @@ else
   echo -e "${YELLOW}No existing RAID detected. Creating RAID1 array...${RESET}"
   RAID_DEVICE="/dev/md0"
 
-  read -rp "Create RAID1 on ${NVME_DEVICES[*]}? This will erase all data on these disks. (y/n): " CONFIRM
-  if [[ "$CONFIRM" != [yY] ]]; then
-    echo "Aborting RAID creation."
+  prompt_yes_no "Create RAID1 on ${NVME_DEVICES[*]}? This will erase all data on these disks." "N"
+  if [[ "$REPLY" == "N" ]]; then
+    echo -e "${YELLOW}Aborting RAID creation.${RESET}"
     exit 0
   fi
 

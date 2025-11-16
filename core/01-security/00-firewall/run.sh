@@ -27,23 +27,19 @@ while true; do
   fi
 done
 
-while true; do
-  read -rp "Allow HTTP (port 80)? (y/n): " HTTP_INPUT
-  case "$HTTP_INPUT" in
-    y|Y) ALLOW_HTTP="true"; break ;;
-    n|N) ALLOW_HTTP="false"; break ;;
-    *) echo "Enter y or n." ;;
-  esac
-done
+prompt_yes_no "Allow HTTP (port 80)?" "N"
+if [[ "$REPLY" == "Y" ]]; then
+  ALLOW_HTTP="true"
+else
+  ALLOW_HTTP="false"
+fi
 
-while true; do
-  read -rp "Allow HTTPS (port 443)? (y/n): " HTTPS_INPUT
-  case "$HTTPS_INPUT" in
-    y|Y) ALLOW_HTTPS="true"; break ;;
-    n|N) ALLOW_HTTPS="false"; break ;;
-    *) echo "Enter y or n." ;;
-  esac
-done
+prompt_yes_no "Allow HTTPS (port 443)?" "N"
+if [[ "$REPLY" == "Y" ]]; then
+  ALLOW_HTTPS="true"
+else
+  ALLOW_HTTPS="false"
+fi
 
 read -rp "Enter any additional ports to allow (comma-separated, or leave blank): " EXTRA_PORTS_RAW
 IFS=',' read -ra EXTRA_PORTS <<< "${EXTRA_PORTS_RAW}"

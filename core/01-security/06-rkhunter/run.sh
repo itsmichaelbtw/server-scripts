@@ -47,9 +47,9 @@ rkhunter --check --skip-keypress
 
 echo -e "${GREEN}✓ RKHunter installation and initial scan complete.${RESET}"
 
-read -rp "Do you want to schedule RKHunter via CRON? (y/n): " SCHEDULE_CRON
+prompt_yes_no "Do you want to schedule RKHunter via CRON?" "Y"
 
-if [[ "${SCHEDULE_CRON,,}" == "y" ]]; then
+if [[ "$REPLY" == "Y" ]]; then
   read -rp "Enter CRON schedule (minute hour day month day_of_week) or leave empty for default (30 2 * * *): " CRON_PATTERN
   CRON_PATTERN="${CRON_PATTERN:-30 2 * * *}"  # Default: daily at 2:30 AM
   CRON_CMD="rkhunter --update && rkhunter --check --skip-keypress"
