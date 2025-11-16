@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # File path: 00-system/01-utilities/run.sh
-# Purpose: Install general-purpose server utilities for management and troubleshooting, including cron/log tools.
+# Purpose: Install general-purpose server utilities and system information tools for management and troubleshooting, including cron/log tools.
 
 set -euo pipefail
 
@@ -9,7 +9,7 @@ ROOT_DIR=$(realpath "$SCRIPT_DIR/../../..")
 source "$ROOT_DIR/common.sh"
 
 SCRIPT_NAME="00-utilities"
-SCRIPT_DESC="Install general-purpose utilities (curl, wget, git, jq, editors, network tools) and CRON/log support."
+SCRIPT_DESC="Install general-purpose utilities, system information tools, and CRON/log support."
 
 echo -e "\n${BLUE}Running script: ${SCRIPT_NAME}${RESET}"
 echo -e "${BLUE}Description: ${SCRIPT_DESC}${RESET}\n"
@@ -33,7 +33,11 @@ apt install -y \
   cron \
   at \
   logrotate \
-  mailutils
+  mailutils \
+  lsb-release \
+  neofetch \
+  dmidecode \
+  lshw
 
 echo -e "${YELLOW}Verifying installation...${RESET}"
 
@@ -64,5 +68,33 @@ logrotate --version | head -n 1
 echo -e "\nmailutils installation check:"
 dpkg -l | grep mailutils || echo "mailutils installed"
 
+echo -e "\nneofetch installation check:"
+dpkg -l | grep neofetch || echo "neofetch installed"
+
 echo -e "${GREEN}✓ Utility installation complete.${RESET}"
+
+echo -e "${YELLOW}\n==== System Information ====${RESET}"
+echo -e "${BLUE}OS & Kernel:${RESET}"
+lsb_release -a
+uname -r
+
+echo -e "${BLUE}\nCPU Info:${RESET}"
+lscpu
+
+echo -e "${BLUE}\nMemory Info:${RESET}"
+free -h
+
+echo -e "${BLUE}\nDisk Usage:${RESET}"
+df -h
+
+echo -e "${BLUE}\nTop 5 Largest Mounts:${RESET}"
+du -h / 2>/dev/null | sort -rh | head -n 5
+
+echo -e "${BLUE}\nNetwork Interfaces & IPs:${RESET}"
+ip -brief addr
+
+echo -e "${BLUE}\nOptional Neofetch Overview:${RESET}"
+neofetch --stdout
+
+echo -e "${GREEN}✓ System information displayed successfully.${RESET}"
 echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
