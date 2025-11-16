@@ -45,8 +45,5 @@ docker run -d \
   --security-opt apparmor=unconfined \
   netdata/netdata
 
-SERVER_IP=$(ip route get 1 | awk '{print $7; exit}')
-
-echo -e "${GREEN}✓ NetData deployed successfully.${RESET}"
-echo -e "${YELLOW}Access the dashboard at: http://$SERVER_IP:19999${RESET}"
+display_service_url "NetData" 19999
 echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"

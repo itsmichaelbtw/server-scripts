@@ -48,7 +48,5 @@ docker run -d \
   --root /srv \
   --no-auth
 
-SERVER_IP=$(ip route get 1 | awk '{print $7; exit}')
-echo -e "${GREEN}✓ FileBrowser deployed successfully.${RESET}"
-echo -e "${YELLOW}Access the GUI at: http://$SERVER_IP:$FB_PORT${RESET}"
+display_service_url "FileBrowser" "$FB_PORT"
 echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
