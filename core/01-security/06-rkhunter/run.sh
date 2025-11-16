@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # File path: 01-security/06-rkhunter/run.sh
-# Purpose: Install RKHunter, apply configuration, and run an initial scan.
+# Purpose: Install RKHunter, apply configuration, run initial scan, and optionally schedule via CRON.
 
 set -euo pipefail
 
@@ -9,7 +9,7 @@ ROOT_DIR=$(realpath "$SCRIPT_DIR/../../..")
 source "$ROOT_DIR/common.sh"
 
 SCRIPT_NAME="06-rkhunter"
-SCRIPT_DESC="Install RKHunter, apply configuration, and run initial rootkit scan."
+SCRIPT_DESC="Install RKHunter, apply configuration, run initial rootkit scan, and optionally schedule a CRON job."
 
 echo -e "\n${BLUE}Running script: ${SCRIPT_NAME}${RESET}"
 echo -e "${BLUE}Description: ${SCRIPT_DESC}${RESET}\n"
@@ -46,4 +46,19 @@ rkhunter --propupd
 rkhunter --check --skip-keypress
 
 echo -e "${GREEN}✓ RKHunter installation and initial scan complete.${RESET}"
+
+read -rp "Do you want to schedule RKHunter via CRON? (y/n): " SCHEDULE_CRON
+
+if [[ "${SCHEDULE_CRON,,}" == "y" ]]; then
+  read -rp "Enter CRON schedule (minute hour day month day_of_week) or leave empty for default (30 2 * * *): " CRON_PATTERN
+  CRON_PATTERN="${CRON_PATTERN:-30 2 * * *}"  # Default: daily at 2:30 AM
+  CRON_CMD="rkhunter --update && rkhunter --check --skip-keypress"
+
+  (crontab -l 2>/dev/null; echo "$CRON_PATTERN $CRON_CMD") | crontab -
+
+  echo -e "${GREEN}✓ RKHunter scheduled via CRON: ${CRON_PATTERN}${RESET}"
+else
+  echo -e "${YELLOW}CRON scheduling skipped.${RESET}"
+fi
+
 echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
