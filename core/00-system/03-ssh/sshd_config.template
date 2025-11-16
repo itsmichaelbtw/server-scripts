@@ -1,0 +1,25 @@
+# SSHD Configuration Template
+# This file will be processed by the provisioning script.
+
+Port {{SSH_PORT}}
+Protocol 2
+
+PermitRootLogin {{DISABLE_ROOT}}
+PasswordAuthentication {{DISABLE_PASSWORD}}
+
+PubkeyAuthentication yes
+ChallengeResponseAuthentication no
+UsePAM yes
+
+X11Forwarding no
+AllowAgentForwarding yes
+AllowTcpForwarding no
+
+TCPKeepAlive yes
+ClientAliveInterval 300
+ClientAliveCountMax 2
+
+MaxAuthTries 3
+LoginGraceTime 20
+
+Subsystem sftp /usr/lib/openssh/sftp-server

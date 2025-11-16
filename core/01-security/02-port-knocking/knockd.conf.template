@@ -1,0 +1,14 @@
+[options]
+UseSyslog
+
+[openSSH]
+sequence = {{KNOCK_1}},{{KNOCK_2}},{{KNOCK_3}}
+seq_timeout = 15
+command = /usr/sbin/ufw allow {{TARGET_PORT}}/tcp
+tcpflags = syn
+
+[closeSSH]
+sequence = {{KNOCK_3}},{{KNOCK_2}},{{KNOCK_1}}
+seq_timeout = 15
+command = /usr/sbin/ufw deny {{TARGET_PORT}}/tcp
+tcpflags = syn

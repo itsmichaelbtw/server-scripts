@@ -1,0 +1,12 @@
+[DEFAULT]
+bantime = {{BAN_TIME}}
+findtime = {{FIND_TIME}}
+maxretry = {{MAX_RETRIES}}
+backend = systemd
+
+[sshd]
+enabled = true
+port = {{SSH_PORT}}
+filter = sshd
+logpath = /var/log/auth.log
+maxretry = {{MAX_RETRIES}}

@@ -1,0 +1,5 @@
+[Interface]
+Address = {{WG_SUBNET}}
+ListenPort = {{WG_PORT}}
+PrivateKey = {{SERVER_PRIVATE_KEY}}
+SaveConfig = true

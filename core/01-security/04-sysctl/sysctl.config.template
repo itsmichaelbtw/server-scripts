@@ -1,0 +1,38 @@
+# Security and networking sysctl hardening
+
+# IP Spoofing protection
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+
+# Ignore broadcast ICMP requests
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+
+# Log suspicious packets
+net.ipv4.conf.all.log_martians = 1
+net.ipv4.conf.default.log_martians = 1
+
+# Disable source routing
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# Disable ICMP redirects
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+
+# Disable IPv6 Router Advertisements acceptance
+net.ipv6.conf.all.accept_ra = 0
+net.ipv6.conf.default.accept_ra = 0
+
+# Enable SYN cookies
+net.ipv4.tcp_syncookies = 1
+
+# Ignore bogus ICMP responses
+net.ipv4.icmp_ignore_bogus_error_responses = 1
+
+# File descriptor limits (optional)
+fs.file-max = 2097152
+
+# Enable IP forwarding only if needed (default 0)
+net.ipv4.ip_forward = 0

@@ -1,0 +1,20 @@
+# Use public NTP servers from pool.ntp.org
+pool 0.ubuntu.pool.ntp.org iburst
+pool 1.ubuntu.pool.ntp.org iburst
+pool 2.ubuntu.pool.ntp.org iburst
+pool 3.ubuntu.pool.ntp.org iburst
+
+# Record the rate at which the system clock gains/loses time
+driftfile /var/lib/chrony/chrony.drift
+
+# Allow local network (optional, comment out if not needed)
+# allow 192.168.0.0/16
+
+# Serve time even if not synchronized to upstream servers
+local stratum 10
+
+# Log measurements statistics
+log tracking measurements statistics
+
+# Security options
+bindcmdaddress 127.0.0.1
