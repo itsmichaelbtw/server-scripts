@@ -30,3 +30,14 @@ validate_environment() {
   ensure_ubuntu
   echo -e "${GREEN}✓ Environment validated.${RESET}"
 }
+
+display_service_url() {
+  local service_name="$1"
+  local port="$2"
+  
+  local server_ip
+  server_ip=$(ip route get 1 | awk '{print $7; exit}')
+
+  echo -e "${GREEN}✓ $service_name deployed successfully.${RESET}"
+  echo -e "${YELLOW}Access the service at: http://$server_ip:$port${RESET}"
+}
