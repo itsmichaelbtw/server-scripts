@@ -33,7 +33,6 @@ apt install -y \
   cron \
   at \
   logrotate \
-  mailutils \
   lsb-release \
   neofetch \
   dmidecode \
