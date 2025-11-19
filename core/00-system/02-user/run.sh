@@ -30,14 +30,12 @@ while true; do
   fi
 done
 
-while true; do
-  read -rp "Should this user have sudo privileges? (y/n): " SUDO_INPUT
-  case "$SUDO_INPUT" in
-    y|Y) ENABLE_SUDO="true"; break ;;
-    n|N) ENABLE_SUDO="false"; break ;;
-    *) echo -e "${RED}Please enter 'y' or 'n'.${RESET}" ;;
-  esac
-done
+prompt_yes_no "Should this user have sudo privileges?" "N"
+if [[ "$REPLY" == "Y" ]]; then
+  ENABLE_SUDO="true"
+else
+  ENABLE_SUDO="false"
+fi
 
 echo -e "\n${YELLOW}Step 1: Creating user '${USER_NAME}' if not exists...${RESET}"
 

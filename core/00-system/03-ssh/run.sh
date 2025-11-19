@@ -16,36 +16,24 @@ echo -e "${BLUE}Description: ${SCRIPT_DESC}${RESET}\n"
 
 validate_environment
 
-while true; do
-  read -rp "Enter SSH port (default 22): " SSH_PORT
-  SSH_PORT="${SSH_PORT:-22}"
+prompt_for_port "Enter SSH port" "22"
+SSH_PORT="$PORT_REPLY"
 
-  if [[ "$SSH_PORT" =~ ^[0-9]+$ ]] && (( SSH_PORT >= 1 && SSH_PORT <= 65535 )); then
-    break
-  else
-    echo -e "${RED}Invalid port. Must be an integer 1–65535.${RESET}"
-  fi
-done
+prompt_yes_no "Disable SSH password authentication?" "Y"
+if [[ "$REPLY" == "Y" ]]; then
+  DISABLE_PASSWORD="yes"
+else
+  DISABLE_PASSWORD="no"
+fi
 
-while true; do
-  read -rp "Disable SSH password authentication? (y/n): " PASS_INPUT
-  case "$PASS_INPUT" in
-    y|Y) DISABLE_PASSWORD="yes"; break ;;
-    n|N) DISABLE_PASSWORD="no"; break ;;
-    *) echo -e "${RED}Please enter 'y' or 'n'.${RESET}" ;;
-  esac
-done
+prompt_yes_no "Disable SSH root login?" "Y"
+if [[ "$REPLY" == "Y" ]]; then
+  DISABLE_ROOT="yes"
+else
+  DISABLE_ROOT="no"
+fi
 
-while true; do
-  read -rp "Disable SSH root login? (y/n): " ROOT_INPUT
-  case "$ROOT_INPUT" in
-    y|Y) DISABLE_ROOT="yes"; break ;;
-    n|N) DISABLE_ROOT="no"; break ;;
-    *) echo -e "${RED}Please enter 'y' or 'n'.${RESET}" ;;
-  esac
-done
-
-TEMPLATE_FILE="$SCRIPT_DIR/sshd_config.template"
+TEMPLATE_FILE="$SCRIPT_DIR/sshd_config"
 TARGET_FILE="/etc/ssh/sshd_config"
 BACKUP_FILE="/etc/ssh/sshd_config.backup-$(date +%Y%m%d-%H%M%S)"
 
