@@ -40,32 +40,12 @@ ENABLE_DAEMON=$(echo "$REPLY" | tr 'YN' 'yn')
 
 TEMPLATE_FILE="$SCRIPT_DIR/knockd.conf"
 TARGET_FILE="/etc/knockd.conf"
-BACKUP_FILE="/etc/knockd.conf.backup-$(date +%Y%m%d-%H%M%S)"
 
-if [[ ! -f "$TEMPLATE_FILE" ]]; then
-  echo -e "${RED}[ERROR] Template missing: $TEMPLATE_FILE${RESET}"
-  exit 1
-fi
-
-if [[ -f "$TARGET_FILE" ]]; then
-  echo -e "${YELLOW}Backing up existing knockd.conf...${RESET}"
-  cp "$TARGET_FILE" "$BACKUP_FILE"
-  echo -e "${GREEN}✓ Backup created at ${BACKUP_FILE}${RESET}"
-fi
-
-echo -e "${YELLOW}Generating new knockd.conf from template...${RESET}"
-
-TEMP_OUTPUT=$(mktemp)
-
-sed \
+render_template_config "$TEMPLATE_FILE" "$TARGET_FILE" 600 \
   -e "s|{{KNOCK_1}}|${KNOCK_SEQ[0]}|g" \
   -e "s|{{KNOCK_2}}|${KNOCK_SEQ[1]}|g" \
   -e "s|{{KNOCK_3}}|${KNOCK_SEQ[2]}|g" \
-  -e "s|{{TARGET_PORT}}|$TARGET_PORT|g" \
-  "$TEMPLATE_FILE" > "$TEMP_OUTPUT"
-
-cp "$TEMP_OUTPUT" "$TARGET_FILE"
-rm -f "$TEMP_OUTPUT"
+  -e "s|{{TARGET_PORT}}|$TARGET_PORT|g"
 
 echo -e "${YELLOW}Configuring knockd service...${RESET}"
 sed -i "s/^START_KNOCKD=.*/START_KNOCKD=$ENABLE_DAEMON/" /etc/default/knockd

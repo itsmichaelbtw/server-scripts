@@ -33,46 +33,23 @@ fi
 
 TEMPLATE_FILE="$SCRIPT_DIR/sshd_config"
 TARGET_FILE="/etc/ssh/sshd_config"
-BACKUP_FILE="/etc/ssh/sshd_config.backup-$(date +%Y%m%d-%H%M%S)"
 
-if [[ ! -f "$TEMPLATE_FILE" ]]; then
-  echo -e "${RED}[ERROR] Template file not found: $TEMPLATE_FILE${RESET}"
-  exit 1
-fi
+validate_ssh_config() {
+  ssh -t -o BatchMode=yes localhost "exit" 2>/dev/null || true # prevent warnings
+  sshd -t -f "$1"
+}
 
-echo -e "\n${YELLOW}Backing up existing SSH configuration...${RESET}"
-cp "$TARGET_FILE" "$BACKUP_FILE"
-echo -e "${GREEN}✓ Backup created at: ${BACKUP_FILE}${RESET}"
-
-echo -e "${YELLOW}Generating new SSH configuration...${RESET}"
-
-TEMP_OUTPUT=$(mktemp)
-sed \
+render_template_config "$TEMPLATE_FILE" "$TARGET_FILE" 600 \
   -e "s|{{SSH_PORT}}|$SSH_PORT|g" \
   -e "s|{{DISABLE_PASSWORD}}|$DISABLE_PASSWORD|g" \
   -e "s|{{DISABLE_ROOT}}|$DISABLE_ROOT|g" \
-  "$TEMPLATE_FILE" > "$TEMP_OUTPUT"
-
-echo -e "${YELLOW}Validating SSH configuration syntax...${RESET}"
-ssh -t -o BatchMode=yes localhost "exit" 2>/dev/null || true # prevent warnings
-sshd -t -f "$TEMP_OUTPUT"
-
-echo -e "${GREEN}✓ SSH configuration validated successfully.${RESET}"
-
-echo -e "${YELLOW}Applying new SSH configuration...${RESET}"
-cp "$TEMP_OUTPUT" "$TARGET_FILE"
-chmod 600 "$TARGET_FILE"
-rm -f "$TEMP_OUTPUT"
+  --validate "validate_ssh_config"
 
 echo -e "${YELLOW}Restarting SSH service...${RESET}"
-
 if systemctl restart ssh; then
   echo -e "${GREEN}✓ SSH restarted successfully.${RESET}"
 else
-  echo -e "${RED}[ERROR] SSH restart failed. Restoring backup...${RESET}"
-  cp "$BACKUP_FILE" "$TARGET_FILE"
-  systemctl restart ssh
-  echo -e "${YELLOW}Backup restored. SSH restarted safely.${RESET}"
+  echo -e "${RED}[ERROR] SSH restart failed. Please restore the previous backup manually if needed.${RESET}"
   exit 1
 fi
 

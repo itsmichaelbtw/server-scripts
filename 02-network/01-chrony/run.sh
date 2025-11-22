@@ -19,23 +19,9 @@ apt update -y
 apt install -y chrony
 
 CHRONY_CONF="/etc/chrony/chrony.conf"
-BACKUP_FILE="/etc/chrony/chrony.conf.backup-$(date +%Y%m%d-%H%M%S)"
-
-if [[ -f "$CHRONY_CONF" ]]; then
-  echo -e "${YELLOW}Backing up existing chrony.conf...${RESET}"
-  cp "$CHRONY_CONF" "$BACKUP_FILE"
-  echo -e "${GREEN}✓ Backup created at ${BACKUP_FILE}${RESET}"
-fi
-
 TEMPLATE_FILE="$SCRIPT_DIR/chrony.conf"
 
-if [[ ! -f "$TEMPLATE_FILE" ]]; then
-  echo -e "${RED}[ERROR] Template missing: $TEMPLATE_FILE${RESET}"
-  exit 1
-fi
-
-echo -e "${YELLOW}Applying Chrony template...${RESET}"
-cp "$TEMPLATE_FILE" "$CHRONY_CONF"
+render_template_config "$TEMPLATE_FILE" "$CHRONY_CONF" 644
 
 echo -e "${YELLOW}Enabling and starting Chrony service...${RESET}"
 systemctl enable chrony

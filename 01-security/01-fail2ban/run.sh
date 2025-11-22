@@ -60,33 +60,12 @@ echo -e "${GREEN}✓ Fail2Ban installed and service started.${RESET}"
 
 TEMPLATE_FILE="$SCRIPT_DIR/jail.local"
 TARGET_FILE="/etc/fail2ban/jail.local"
-BACKUP_FILE="/etc/fail2ban/jail.local.backup-$(date +%Y%m%d-%H%M%S)"
 
-if [[ ! -f "$TEMPLATE_FILE" ]]; then
-  echo -e "${RED}[ERROR] Template missing: $TEMPLATE_FILE${RESET}"
-  exit 1
-fi
-
-if [[ -f "$TARGET_FILE" ]]; then
-  echo -e "${YELLOW}Backing up existing jail.local...${RESET}"
-  cp "$TARGET_FILE" "$BACKUP_FILE"
-  echo -e "${GREEN}✓ Backup created at ${BACKUP_FILE}${RESET}"
-fi
-
-echo -e "${YELLOW}Generating new jail.local from template...${RESET}"
-
-TEMP_OUTPUT=$(mktemp)
-
-sed \
+render_template_config "$TEMPLATE_FILE" "$TARGET_FILE" 600 \
   -e "s|{{SSH_PORT}}|$SSH_PORT|g" \
   -e "s|{{BAN_TIME}}|$BAN_TIME|g" \
   -e "s|{{FIND_TIME}}|$FIND_TIME|g" \
-  -e "s|{{MAX_RETRIES}}|$MAX_RETRIES|g" \
-  "$TEMPLATE_FILE" > "$TEMP_OUTPUT"
-
-echo -e "${YELLOW}Applying new Fail2Ban configuration...${RESET}"
-cp "$TEMP_OUTPUT" "$TARGET_FILE"
-rm -f "$TEMP_OUTPUT"
+  -e "s|{{MAX_RETRIES}}|$MAX_RETRIES|g"
 
 echo -e "${YELLOW}Reloading Fail2Ban...${RESET}"
 systemctl restart fail2ban

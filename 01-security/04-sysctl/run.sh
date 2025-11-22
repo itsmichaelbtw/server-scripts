@@ -15,23 +15,9 @@ print_script_header
 validate_environment
 
 SYSCTL_FILE="/etc/sysctl.conf"
-BACKUP_FILE="/etc/sysctl.conf.backup-$(date +%Y%m%d-%H%M%S)"
-
-if [[ -f "$SYSCTL_FILE" ]]; then
-  echo -e "${YELLOW}Backing up existing sysctl.conf...${RESET}"
-  cp "$SYSCTL_FILE" "$BACKUP_FILE"
-  echo -e "${GREEN}✓ Backup created at ${BACKUP_FILE}${RESET}"
-fi
-
 TEMPLATE_FILE="$SCRIPT_DIR/sysctl.conf"
 
-if [[ ! -f "$TEMPLATE_FILE" ]]; then
-  echo -e "${RED}[ERROR] Template file missing: $TEMPLATE_FILE${RESET}"
-  exit 1
-fi
-
-echo -e "${YELLOW}Applying sysctl template...${RESET}"
-cp "$TEMPLATE_FILE" "$SYSCTL_FILE"
+render_template_config "$TEMPLATE_FILE" "$SYSCTL_FILE" 644
 
 echo -e "${YELLOW}Reloading sysctl settings...${RESET}"
 sysctl -p

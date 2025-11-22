@@ -47,22 +47,11 @@ helm repo add traefik https://traefik.github.io/charts
 helm repo update
 
 TEMPLATE_FILE="$SCRIPT_DIR/traefik.conf"
-
-if [[ ! -f "$TEMPLATE_FILE" ]]; then
-  echo -e "${RED}[ERROR] Template missing: $TEMPLATE_FILE${RESET}"
-  exit 1
-fi
-
-TEMP_OUTPUT=$(mktemp)
-
-sed \
-  -e "s|{{DASHBOARD_ENABLED}}|$(echo "$ENABLE_DASH" | tr '[:upper:]' '[:lower:]')|g" \
-  -e "s|{{ACME_EMAIL}}|$ACME_EMAIL|g" \
-  "$TEMPLATE_FILE" > "$TEMP_OUTPUT"
-
 VALUES_FILE="$SCRIPT_DIR/traefik.conf"
-cp "$TEMP_OUTPUT" "$VALUES_FILE"
-rm -f "$TEMP_OUTPUT"
+
+render_template_config "$TEMPLATE_FILE" "$VALUES_FILE" 644 \
+  -e "s|{{DASHBOARD_ENABLED}}|$(echo "$ENABLE_DASH" | tr '[:upper:]' '[:lower:]')|g" \
+  -e "s|{{ACME_EMAIL}}|$ACME_EMAIL|g"
 
 helm upgrade --install traefik traefik/traefik \
   --namespace "$TRAEFIK_NS" \

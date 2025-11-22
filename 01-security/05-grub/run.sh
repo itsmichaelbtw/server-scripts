@@ -15,23 +15,9 @@ print_script_header
 validate_environment
 
 GRUB_FILE="/etc/default/grub"
-BACKUP_FILE="/etc/default/grub.backup-$(date +%Y%m%d-%H%M%S)"
-
-if [[ -f "$GRUB_FILE" ]]; then
-  echo -e "${YELLOW}Backing up existing GRUB config...${RESET}"
-  cp "$GRUB_FILE" "$BACKUP_FILE"
-  echo -e "${GREEN}✓ Backup created at ${BACKUP_FILE}${RESET}"
-fi
-
 TEMPLATE_FILE="$SCRIPT_DIR/grub"
 
-if [[ ! -f "$TEMPLATE_FILE" ]]; then
-  echo -e "${RED}[ERROR] Template file missing: $TEMPLATE_FILE${RESET}"
-  exit 1
-fi
-
-echo -e "${YELLOW}Applying GRUB template...${RESET}"
-cp "$TEMPLATE_FILE" "$GRUB_FILE"
+render_template_config "$TEMPLATE_FILE" "$GRUB_FILE" 644
 
 echo -e "${YELLOW}Updating GRUB configuration...${RESET}"
 update-grub

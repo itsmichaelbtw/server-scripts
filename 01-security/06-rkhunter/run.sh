@@ -19,22 +19,9 @@ apt update -y
 apt install -y rkhunter
 
 RKHUNTER_CONF="/etc/rkhunter.conf"
-BACKUP_FILE="/etc/rkhunter.conf.backup-$(date +%Y%m%d-%H%M%S)"
-
-if [[ -f "$RKHUNTER_CONF" ]]; then
-  echo -e "${YELLOW}Backing up existing rkhunter.conf...${RESET}"
-  cp "$RKHUNTER_CONF" "$BACKUP_FILE"
-  echo -e "${GREEN}✓ Backup created at ${BACKUP_FILE}${RESET}"
-fi
-
 TEMPLATE_FILE="$SCRIPT_DIR/rkhunter.conf"
 
-if [[ -f "$TEMPLATE_FILE" ]]; then
-  echo -e "${YELLOW}Applying rkhunter configuration template...${RESET}"
-  cp "$TEMPLATE_FILE" "$RKHUNTER_CONF"
-else
-  echo -e "${YELLOW}No template found, using default rkhunter configuration.${RESET}"
-fi
+render_template_config "$TEMPLATE_FILE" "$RKHUNTER_CONF" 644
 
 echo -e "${YELLOW}Updating RKHunter database...${RESET}"
 rkhunter --update
