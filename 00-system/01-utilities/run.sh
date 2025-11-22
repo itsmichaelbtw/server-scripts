@@ -70,28 +70,32 @@ dpkg -l | grep neofetch || echo "neofetch installed"
 
 echo_green "✓ Utility installation complete."
 
-echo_yellow "\n==== System Information ===="
-echo_blue "OS & Kernel:"
-lsb_release -a
-uname -r
+prompt_yes_no "Would you like to print system information?" "Y"
+if [[ "$REPLY" == "Y" ]]; then
+  echo_yellow "\n==== System Information ===="
+  echo_blue "OS & Kernel:"
+  lsb_release -a
+  uname -r
 
-echo_blue "\nCPU Info:"
-lscpu
+  echo_blue "\nCPU Info:"
+  lscpu
 
-echo_blue "\nMemory Info:"
-free -h
+  echo_blue "\nMemory Info:"
+  free -h
 
-echo_blue "\nDisk Usage:"
-df -h
+  echo_blue "\nDisk Usage:"
+  df -h
 
-echo_blue "\nTop 5 Largest Mounts:"
-du -h / 2>/dev/null | sort -rh | head -n 5
+  echo_blue "\nTop 5 Largest Mounts:"
+  du -h / 2>/dev/null | sort -rh | head -n 5 || true
 
-echo_blue "\nNetwork Interfaces & IPs:"
-ip -brief addr
+  echo_blue "\nNetwork Interfaces & IPs:"
+  ip -brief addr
 
-echo_blue "\nOptional Neofetch Overview:"
-neofetch --stdout
+  echo_blue "\nOptional Neofetch Overview:"
+  neofetch --stdout
 
-echo_green "✓ System information displayed successfully."
+  echo_green "✓ System information displayed successfully."
+fi
+
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"
