@@ -15,7 +15,7 @@ print_script_header
 
 read -rp "Enter remote server IP address: " SERVER_IP
 if [[ -z "$SERVER_IP" ]]; then
-  echo -e "${RED}[ERROR] IP address cannot be empty.${RESET}"
+  echo_red "[ERROR] IP address cannot be empty."
   exit 1
 fi
 
@@ -34,13 +34,13 @@ REMOTE_DIR="${REMOTE_DIR%/}"
 SOURCE_DIR="$SCRIPT_DIR"
 
 if [[ ! -d "$SOURCE_DIR" ]] || [[ -z "$(ls -A "$SOURCE_DIR")" ]]; then
-  echo -e "${RED}[ERROR] Source directory is empty or does not exist.${RESET}"
+  echo_red "[ERROR] Source directory is empty or does not exist."
   exit 1
 fi
 
-echo -e "\n${YELLOW}Will copy server scripts to ${SSH_USER}@${SERVER_IP}:${REMOTE_DIR} (port ${SSH_PORT})${RESET}"
+echo_yellow "\nWill copy server scripts to ${SSH_USER}@${SERVER_IP}:${REMOTE_DIR} (port ${SSH_PORT})"
 
-echo -e "${BLUE}Files and directories to be copied:${RESET}"
+echo_blue "Files and directories to be copied:"
 find "$SOURCE_DIR" -maxdepth 1 -mindepth 1 \
   ! -name ".*" \
   ! -name "*.log" \
@@ -50,15 +50,15 @@ done
 
 prompt_yes_no "Proceed with file transfer?" "Y"
 if [[ "$REPLY" == "N" ]]; then
-  echo -e "${YELLOW}Operation cancelled by user.${RESET}"
+  echo_yellow "Operation cancelled by user."
   exit 0
 fi
 
-echo -e "\n${YELLOW}Creating remote directory structure...${RESET}"
+echo_yellow "\nCreating remote directory structure..."
 ssh -p "$SSH_PORT" "${SSH_USER}@${SERVER_IP}" "mkdir -p ${REMOTE_DIR}"
-echo -e "${GREEN}✓ Created remote directory${RESET}"
+echo_green "✓ Created remote directory"
 
-echo -e "${YELLOW}Copying files to remote server...${RESET}"
+echo_yellow "Copying files to remote server..."
 tar -czvf transfer.tar.gz \
   --exclude='.git' \
   --exclude='.github' \
@@ -72,17 +72,17 @@ rm transfer.tar.gz
 
 TRANSFER_EXIT_STATUS=$?
 if [[ $TRANSFER_EXIT_STATUS -ne 0 ]]; then
-  echo -e "${RED}[ERROR] File transfer failed with exit status $TRANSFER_EXIT_STATUS${RESET}"
+  echo_red "[ERROR] File transfer failed with exit status $TRANSFER_EXIT_STATUS"
   exit 1
 fi
 
-echo -e "${GREEN}✓ Server scripts successfully copied to ${SSH_USER}@${SERVER_IP}:${REMOTE_DIR}${RESET}"
+echo_green "✓ Server scripts successfully copied to ${SSH_USER}@${SERVER_IP}:${REMOTE_DIR}"
 
 prompt_yes_no "Make scripts executable on remote system?" "Y"
 if [[ "$REPLY" == "Y" ]]; then
-  echo -e "${YELLOW}Making scripts executable...${RESET}"
+  echo_yellow "Making scripts executable..."
   ssh -p "$SSH_PORT" "${SSH_USER}@${SERVER_IP}" "chmod +x ${REMOTE_DIR}/*.sh ${REMOTE_DIR}/*/*.sh ${REMOTE_DIR}/*/*/*.sh 2>/dev/null || echo 'Some files could not be made executable'"
-  echo -e "${GREEN}✓ Scripts are now executable${RESET}"
+  echo_green "✓ Scripts are now executable"
 fi
 
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo_green "✓ Script ${SCRIPT_NAME} finished successfully.\n"

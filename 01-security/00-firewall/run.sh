@@ -34,26 +34,27 @@ fi
 read -rp "Enter any additional ports to allow (comma-separated, or leave blank): " EXTRA_PORTS_RAW
 IFS=',' read -ra EXTRA_PORTS <<< "${EXTRA_PORTS_RAW}"
 
-echo -e "\n${YELLOW}Installing UFW if not installed...${RESET}"
+echo ""
+echo_yellow "Installing UFW if not installed..."
 apt install -y ufw
 
-echo -e "${YELLOW}Resetting existing UFW rules...${RESET}"
+echo_yellow "Resetting existing UFW rules..."
 ufw --force reset
 
-echo -e "${YELLOW}Setting default policies...${RESET}"
+echo_yellow "Setting default policies..."
 ufw default deny incoming
 ufw default allow outgoing
 
-echo -e "${YELLOW}Allowing SSH port ${SSH_PORT}...${RESET}"
+echo_yellow "Allowing SSH port ${SSH_PORT}..."
 ufw allow "${SSH_PORT}/tcp"
 
 if [[ "$ALLOW_HTTP" == "true" ]]; then
-  echo -e "${YELLOW}Allowing HTTP (port 80)...${RESET}"
+  echo_yellow "Allowing HTTP (port 80)..."
   ufw allow 80/tcp
 fi
 
 if [[ "$ALLOW_HTTPS" == "true" ]]; then
-  echo -e "${YELLOW}Allowing HTTPS (port 443)...${RESET}"
+  echo_yellow "Allowing HTTPS (port 443)..."
   ufw allow 443/tcp
 fi
 
@@ -61,20 +62,21 @@ for PORT in "${EXTRA_PORTS[@]}"; do
   PORT_CLEAN="$(echo "$PORT" | xargs)"
   if [[ -n "$PORT_CLEAN" ]]; then
     if [[ "$PORT_CLEAN" =~ ^[0-9]+$ ]] && (( PORT_CLEAN >= 1 && PORT_CLEAN <= 65535 )); then
-      echo -e "${YELLOW}Allowing additional port ${PORT_CLEAN}...${RESET}"
+      echo_yellow "Allowing additional port ${PORT_CLEAN}..."
       ufw allow "${PORT_CLEAN}/tcp"
     else
-      echo -e "${RED}Skipping invalid port: ${PORT_CLEAN}${RESET}"
+      echo_red "Skipping invalid port: ${PORT_CLEAN}"
     fi
   fi
 done
 
-echo -e "${YELLOW}Applying UFW hardening rules...${RESET}"
+echo_yellow "Applying UFW hardening rules..."
 ufw logging on
 ufw limit "${SSH_PORT}/tcp"
 
-echo -e "${YELLOW}Enabling firewall...${RESET}"
+echo_yellow "Enabling firewall..."
 ufw --force enable
 
-echo -e "\n${GREEN}✓ Firewall configuration complete.${RESET}"
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo ""
+echo_green "✓ Firewall configuration complete."
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

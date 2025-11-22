@@ -45,13 +45,14 @@ render_template_config "$TEMPLATE_FILE" "$TARGET_FILE" 600 \
   -e "s|{{DISABLE_ROOT}}|$DISABLE_ROOT|g" \
   --validate "validate_ssh_config"
 
-echo -e "${YELLOW}Restarting SSH service...${RESET}"
+echo_yellow "Restarting SSH service..."
 if systemctl restart ssh; then
-  echo -e "${GREEN}✓ SSH restarted successfully.${RESET}"
+  echo_green "✓ SSH restarted successfully."
 else
-  echo -e "${RED}[ERROR] SSH restart failed. Please restore the previous backup manually if needed.${RESET}"
+  echo_red "[ERROR] SSH restart failed. Please restore the previous backup manually if needed."
   exit 1
 fi
 
-echo -e "\n${GREEN}✓ SSH configuration complete.${RESET}"
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo ""
+echo_green "✓ SSH configuration complete."
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

@@ -14,17 +14,17 @@ SCRIPT_DESC="Install htop, atop, and glances for system process and performance 
 print_script_header
 validate_environment
 
-echo -e "${YELLOW}Installing htop, atop, glances...${RESET}"
+echo_yellow "Installing htop, atop, glances..."
 apt update -y
 apt install -y htop atop python3-pip
 
 pip3 install --upgrade glances
 
-echo -e "${YELLOW}Enabling atop service for boot logging...${RESET}"
+echo_yellow "Enabling atop service for boot logging..."
 systemctl enable atop
 systemctl restart atop
 
-echo -e "${YELLOW}Verifying installations...${RESET}"
+echo_yellow "Verifying installations..."
 echo -e "\nhtop version:"
 htop --version
 
@@ -34,5 +34,5 @@ atop -V
 echo -e "\nglaces version:"
 glances -V
 
-echo -e "${GREEN}✓ Process monitoring tools installed and configured.${RESET}"
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo_green "✓ Process monitoring tools installed and configured."
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

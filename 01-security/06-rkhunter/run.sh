@@ -14,7 +14,7 @@ SCRIPT_DESC="Install RKHunter, apply configuration, run initial rootkit scan, an
 print_script_header
 validate_environment
 
-echo -e "${YELLOW}Installing RKHunter...${RESET}"
+echo_yellow "Installing RKHunter..."
 apt update -y
 apt install -y rkhunter
 
@@ -23,15 +23,15 @@ TEMPLATE_FILE="$SCRIPT_DIR/rkhunter.conf"
 
 render_template_config "$TEMPLATE_FILE" "$RKHUNTER_CONF" 644
 
-echo -e "${YELLOW}Updating RKHunter database...${RESET}"
+echo_yellow "Updating RKHunter database..."
 rkhunter --update
 
-echo -e "${YELLOW}Running initial RKHunter scan...${RESET}"
+echo_yellow "Running initial RKHunter scan..."
 rkhunter --propupd
 rkhunter --check --skip-keypress
 
-echo -e "${GREEN}✓ RKHunter installation and initial scan complete.${RESET}"
+echo_green "✓ RKHunter installation and initial scan complete."
 
 setup_cron_job "rkhunter --update && rkhunter --check --skip-keypress" "30 2 * * *"
 
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

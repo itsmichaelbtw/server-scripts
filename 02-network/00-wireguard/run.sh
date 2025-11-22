@@ -19,13 +19,13 @@ WG_CONF="$WG_DIR/wg0.conf"
 SERVER_TEMPLATE="$SCRIPT_DIR/wg0.conf"
 CLIENT_TEMPLATE="$SCRIPT_DIR/client.conf"
 
-echo -e "${YELLOW}Installing WireGuard and utilities...${RESET}"
+echo_yellow "Installing WireGuard and utilities..."
 apt update -y
 apt install -y wireguard wireguard-tools qrencode
 
 while true; do
   read -rp "Enter WireGuard VPN subnet (e.g., 10.0.0.1/24): " WG_SUBNET
-  if [[ -n "$WG_SUBNET" ]]; then break; else echo -e "${RED}Subnet cannot be empty.${RESET}"; fi
+  if [[ -n "$WG_SUBNET" ]]; then break; else echo_red "Subnet cannot be empty."; fi
 done
 
 prompt_for_port "Enter WireGuard listening port" "51820"
@@ -35,7 +35,7 @@ mkdir -p "$WG_DIR"
 chmod 700 "$WG_DIR"
 
 if [[ ! -f "$WG_DIR/server_private.key" ]]; then
-  echo -e "${YELLOW}Generating WireGuard server keys...${RESET}"
+  echo_yellow "Generating WireGuard server keys..."
   wg genkey | tee "$WG_DIR/server_private.key" | wg pubkey > "$WG_DIR/server_public.key"
 fi
 
@@ -43,17 +43,17 @@ SERVER_PRIVATE_KEY=$(cat "$WG_DIR/server_private.key")
 
 if [[ -f "$WG_CONF" ]]; then
   BACKUP_FILE="$WG_CONF.backup-$(date +%Y%m%d-%H%M%S)"
-  echo -e "${YELLOW}Backing up existing WireGuard config...${RESET}"
+  echo_yellow "Backing up existing WireGuard config..."
   cp "$WG_CONF" "$BACKUP_FILE"
-  echo -e "${GREEN}✓ Backup created at ${BACKUP_FILE}${RESET}"
+  echo_green "✓ Backup created at ${BACKUP_FILE}"
 fi
 
 if [[ ! -f "$SERVER_TEMPLATE" ]]; then
-  echo -e "${RED}[ERROR] Template missing: $SERVER_TEMPLATE${RESET}"
+  echo_red "[ERROR] Template missing: $SERVER_TEMPLATE"
   exit 1
 fi
 
-echo -e "${YELLOW}Generating WireGuard server configuration from template...${RESET}"
+echo_yellow "Generating WireGuard server configuration from template..."
 
 TEMP_OUTPUT=$(mktemp)
 sed \
@@ -66,28 +66,30 @@ cp "$TEMP_OUTPUT" "$WG_CONF"
 chmod 600 "$WG_CONF"
 rm -f "$TEMP_OUTPUT"
 
-echo -e "${YELLOW}Enabling and starting WireGuard...${RESET}"
+echo_yellow "Enabling and starting WireGuard..."
 systemctl enable wg-quick@wg0
 systemctl start wg-quick@wg0
 
-echo -e "${GREEN}✓ WireGuard installation and initial configuration complete.${RESET}"
+echo_green "✓ WireGuard installation and initial configuration complete."
 
 add_client() {
-  echo -e "\n${BLUE}Adding a new WireGuard client...${RESET}\n"
+  echo ""
+  echo_blue "Adding a new WireGuard client..."
+  echo ""
   
   if [[ ! -f "$CLIENT_TEMPLATE" ]]; then
-    echo -e "${RED}[ERROR] Client template not found: $CLIENT_TEMPLATE${RESET}"
+    echo_red "[ERROR] Client template not found: $CLIENT_TEMPLATE"
     exit 1
   fi
   
   while true; do
     read -rp "Enter a label for the new client (e.g., laptop, phone1): " CLIENT_NAME
-    if [[ -n "$CLIENT_NAME" ]]; then break; else echo -e "${RED}Client name cannot be empty.${RESET}"; fi
+    if [[ -n "$CLIENT_NAME" ]]; then break; else echo_red "Client name cannot be empty."; fi
   done
   
   while true; do
     read -rp "Enter client VPN IP (e.g., 10.0.0.2/24): " CLIENT_IP
-    if [[ "$CLIENT_IP" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/[0-9]+$ ]]; then break; else echo -e "${RED}Invalid IP format.${RESET}"; fi
+    if [[ "$CLIENT_IP" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/[0-9]+$ ]]; then break; else echo_red "Invalid IP format."; fi
   done
   
   CLIENT_PRIVATE_KEY=$(wg genkey)
@@ -99,12 +101,12 @@ add_client() {
   prompt_for_port "Enter server WireGuard port" "$WG_PORT"
   SERVER_PORT="$PORT_REPLY"
   
-  echo -e "${YELLOW}Adding client to server configuration...${RESET}"
+  echo_yellow "Adding client to server configuration..."
   echo -e "\n[Peer]\nPublicKey = $CLIENT_PUBLIC_KEY\nAllowedIPs = $CLIENT_IP" | tee -a "$WG_CONF" > /dev/null
   
-  echo -e "${YELLOW}Restarting WireGuard service...${RESET}"
+  echo_yellow "Restarting WireGuard service..."
   systemctl restart wg-quick@wg0
-  echo -e "${GREEN}✓ Server configuration updated with new client.${RESET}"
+  echo_green "✓ Server configuration updated with new client."
   
   CLIENT_CONF_FILE="$HOME/${CLIENT_NAME}.conf"
   TEMP_OUTPUT=$(mktemp)
@@ -121,17 +123,20 @@ add_client() {
   chmod 600 "$CLIENT_CONF_FILE"
   rm -f "$TEMP_OUTPUT"
   
-  echo -e "${GREEN}✓ Client configuration file created: $CLIENT_CONF_FILE${RESET}"
+  echo_green "✓ Client configuration file created: $CLIENT_CONF_FILE"
   
   if command -v qrencode >/dev/null 2>&1; then
     QR_FILE="$HOME/${CLIENT_NAME}.png"
     qrencode -o "$QR_FILE" -t PNG < "$CLIENT_CONF_FILE"
-    echo -e "${GREEN}✓ QR code generated for mobile import: $QR_FILE${RESET}"
+    echo_green "✓ QR code generated for mobile import: $QR_FILE"
   fi
   
-  echo -e "${BLUE}\nTo connect the client, copy ${CLIENT_CONF_FILE} to your device and run:\n"
-  echo -e "  wg-quick up ${CLIENT_CONF_FILE}\n"
-  echo -e "Or scan the QR code on mobile WireGuard app if generated.${RESET}"
+  echo ""
+  echo_blue "To connect the client, copy ${CLIENT_CONF_FILE} to your device and run:"
+  echo ""
+  echo "  wg-quick up ${CLIENT_CONF_FILE}"
+  echo ""
+  echo_blue "Or scan the QR code on mobile WireGuard app if generated."
   
   prompt_yes_no "Would you like to add another client?" "N"
   if [[ "$REPLY" == "Y" ]]; then
@@ -144,4 +149,5 @@ if [[ "$REPLY" == "Y" ]]; then
   add_client
 fi
 
-echo -e "\n${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo ""
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

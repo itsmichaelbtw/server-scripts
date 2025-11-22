@@ -19,8 +19,8 @@ TEMPLATE_FILE="$SCRIPT_DIR/grub"
 
 render_template_config "$TEMPLATE_FILE" "$GRUB_FILE" 644
 
-echo -e "${YELLOW}Updating GRUB configuration...${RESET}"
+echo_yellow "Updating GRUB configuration..."
 update-grub
 
-echo -e "${GREEN}✓ GRUB hardening applied successfully.${RESET}"
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo_green "✓ GRUB hardening applied successfully."
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

@@ -15,7 +15,7 @@ print_script_header
 validate_environment
 
 if ! command -v cloudflared &>/dev/null; then
-  echo -e "${YELLOW}Installing Cloudflare Tunnel (cloudflared)...${RESET}"
+  echo_yellow "Installing Cloudflare Tunnel (cloudflared)..."
   curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o /tmp/cloudflared.deb
   dpkg -i /tmp/cloudflared.deb
   rm /tmp/cloudflared.deb
@@ -39,7 +39,7 @@ done
 CF_TUNNEL_DIR="/etc/cloudflared"
 mkdir -p "$CF_TUNNEL_DIR"
 
-echo -e "${YELLOW}Creating or updating Cloudflare Tunnel using API token...${RESET}"
+echo_yellow "Creating or updating Cloudflare Tunnel using API token..."
 cloudflared tunnel create "$TUNNEL_NAME" --credentials-file "$CF_TUNNEL_DIR/$TUNNEL_NAME.json" --token "$CF_API_TOKEN" || true
 
 YAML_FILE="$CF_TUNNEL_DIR/$TUNNEL_NAME.yaml"
@@ -54,15 +54,15 @@ YAML_FILE="$CF_TUNNEL_DIR/$TUNNEL_NAME.yaml"
   echo "  - service: http_status:404"
 } > "$YAML_FILE"
 
-echo -e "${YELLOW}Installing systemd service for Cloudflare Tunnel...${RESET}"
+echo_yellow "Installing systemd service for Cloudflare Tunnel..."
 cloudflared service install --config "$YAML_FILE" || echo "Service may already exist."
 
 systemctl enable cloudflared
 systemctl restart cloudflared
 
-echo -e "${GREEN}✓ Cloudflare Tunnel setup complete.${RESET}"
-echo -e "${YELLOW}Tunnel exposes the following hostnames to their respective local services:${RESET}"
+echo_green "✓ Cloudflare Tunnel setup complete."
+echo_yellow "Tunnel exposes the following hostnames to their respective local services:"
 for i in "${!HOST_ARRAY[@]}"; do
   echo -e "  ${HOST_ARRAY[$i]} -> localhost:${INGRESS_ENTRIES[$i]##*http://localhost:}"
 done
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

@@ -14,7 +14,7 @@ SCRIPT_DESC="Install Docker Engine, Docker Compose, and configure Docker service
 print_script_header
 validate_environment
 
-echo -e "${YELLOW}Installing required packages...${RESET}"
+echo_yellow "Installing required packages..."
 apt update -y
 apt install -y \
   ca-certificates \
@@ -24,7 +24,7 @@ apt install -y \
   software-properties-common
 
 if [[ ! -f /etc/apt/keyrings/docker.gpg ]]; then
-  echo -e "${YELLOW}Adding Docker GPG key and repository...${RESET}"
+  echo_yellow "Adding Docker GPG key and repository..."
   mkdir -p /etc/apt/keyrings
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
   echo \
@@ -34,25 +34,25 @@ fi
 
 apt update -y
 
-echo -e "${YELLOW}Installing Docker Engine...${RESET}"
+echo_yellow "Installing Docker Engine..."
 apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 read -rp "Enter the username to add to docker group (leave empty to skip): " DOCKER_USER
 if [[ -n "$DOCKER_USER" ]]; then
   usermod -aG docker "$DOCKER_USER"
-  echo -e "${GREEN}Added $DOCKER_USER to docker group.${RESET}"
+  echo_green "Added $DOCKER_USER to docker group."
 fi
 
-echo -e "${YELLOW}Enabling and starting Docker service...${RESET}"
+echo_yellow "Enabling and starting Docker service..."
 systemctl enable docker
 systemctl restart docker
 
-echo -e "${YELLOW}Verifying Docker installation...${RESET}"
+echo_yellow "Verifying Docker installation..."
 docker --version
 docker compose version
 
-echo -e "${YELLOW}Running hello-world container...${RESET}"
+echo_yellow "Running hello-world container..."
 docker run --rm hello-world
 
-echo -e "${GREEN}✓ Docker installation and configuration complete.${RESET}"
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo_green "✓ Docker installation and configuration complete."
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

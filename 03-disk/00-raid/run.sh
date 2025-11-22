@@ -14,7 +14,7 @@ SCRIPT_DESC="Verify or create software RAID1 for NVMe SSDs and configure filesys
 print_script_header
 validate_environment
 
-echo -e "${YELLOW}Installing mdadm and partitioning tools...${RESET}"
+echo_yellow "Installing mdadm and partitioning tools..."
 apt update -y
 apt install -y mdadm parted lsscsi
 
@@ -22,23 +22,23 @@ NVME_DEVICES=($(lsblk -dnp -o NAME,TYPE | grep 'disk' | grep 'nvme' | awk '{prin
 NUM_DEVICES=${#NVME_DEVICES[@]}
 
 if (( NUM_DEVICES < 2 )); then
-  echo -e "${RED}[ERROR] Less than 2 NVMe disks detected. RAID1 requires at least 2.${RESET}"
-  echo -e "${YELLOW}Available disks:${RESET}"
+  echo_red "[ERROR] Less than 2 NVMe disks detected. RAID1 requires at least 2."
+  echo_yellow "Available disks:"
   lsblk -dp
   exit 1
 fi
 
 for device in "${NVME_DEVICES[@]}"; do
   if mount | grep -q "$device"; then
-    echo -e "${RED}[ERROR] Device $device is currently mounted. Cannot use for RAID.${RESET}"
+    echo_red "[ERROR] Device $device is currently mounted. Cannot use for RAID."
     exit 1
   fi
 done
 
-echo -e "${GREEN}Detected NVMe devices: ${NVME_DEVICES[*]}${RESET}"
+echo_green "Detected NVMe devices: ${NVME_DEVICES[*]}"
 
 if ! command -v mdadm &>/dev/null; then
-  echo -e "${YELLOW}Installing mdadm...${RESET}"
+  echo_yellow "Installing mdadm..."
   apt update -y
   apt install -y mdadm
 fi
@@ -46,18 +46,18 @@ fi
 EXISTING_RAID=$(mdadm --detail --scan 2>/dev/null || true)
 
 if [[ -n "$EXISTING_RAID" ]]; then
-  echo -e "${GREEN}Existing RAID detected:${RESET}"
+  echo_green "Existing RAID detected:"
   echo "$EXISTING_RAID"
   
   prompt_yes_no "Would you like to use the existing RAID configuration?" "Y"
   if [[ "$REPLY" == "N" ]]; then
-    echo -e "${YELLOW}Proceeding to create a new RAID array.${RESET}"
+    echo_yellow "Proceeding to create a new RAID array."
     EXISTING_RAID=""
   fi
 fi
 
 if [[ -z "$EXISTING_RAID" ]]; then
-  echo -e "${YELLOW}Preparing to create RAID1 array...${RESET}"
+  echo_yellow "Preparing to create RAID1 array..."
   RAID_DEVICE="/dev/md0"
 
   if [[ -b "$RAID_DEVICE" ]]; then
@@ -66,7 +66,7 @@ if [[ -z "$EXISTING_RAID" ]]; then
 
   prompt_yes_no "Create RAID1 on ${NVME_DEVICES[*]}? This will erase all data on these disks." "N"
   if [[ "$REPLY" == "N" ]]; then
-    echo -e "${YELLOW}Aborting RAID creation.${RESET}"
+    echo_yellow "Aborting RAID creation."
     exit 0
   fi
 
@@ -79,17 +79,17 @@ if [[ -z "$EXISTING_RAID" ]]; then
 
   mdadm --wait "$RAID_DEVICE"
 
-  echo -e "${GREEN}RAID1 array $RAID_DEVICE created successfully.${RESET}"
+  echo_green "RAID1 array $RAID_DEVICE created successfully."
 fi
 
-echo -e "${YELLOW}Saving RAID configuration to mdadm.conf...${RESET}"
+echo_yellow "Saving RAID configuration to mdadm.conf..."
 mdadm --detail --scan >> /etc/mdadm/mdadm.conf
 update-initramfs -u
 
 RAID_DEVICE=${RAID_DEVICE:-/dev/md0}
 
 if ! lsblk "$RAID_DEVICE" | grep -q part; then
-  echo -e "${YELLOW}Creating single partition on $RAID_DEVICE...${RESET}"
+  echo_yellow "Creating single partition on $RAID_DEVICE..."
   parted -s "$RAID_DEVICE" mklabel gpt
   parted -s -a optimal "$RAID_DEVICE" mkpart primary ext4 0% 100%
 fi
@@ -97,7 +97,7 @@ fi
 PARTITION="${RAID_DEVICE}1"
 
 if ! blkid "$PARTITION" &>/dev/null; then
-  echo -e "${YELLOW}Creating ext4 filesystem on $PARTITION...${RESET}"
+  echo_yellow "Creating ext4 filesystem on $PARTITION..."
   mkfs.ext4 "$PARTITION"
 fi
 
@@ -105,10 +105,10 @@ MOUNT_POINT="/mnt/raid"
 mkdir -p "$MOUNT_POINT"
 
 if ! mount | grep -q "$MOUNT_POINT"; then
-  echo -e "${YELLOW}Mounting $PARTITION at $MOUNT_POINT...${RESET}"
+  echo_yellow "Mounting $PARTITION at $MOUNT_POINT..."
   mount "$PARTITION" "$MOUNT_POINT"
   echo "$PARTITION $MOUNT_POINT ext4 defaults 0 0" >> /etc/fstab
 fi
 
-echo -e "${GREEN}✓ RAID setup complete and mounted at $MOUNT_POINT.${RESET}"
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo_green "✓ RAID setup complete and mounted at $MOUNT_POINT."
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

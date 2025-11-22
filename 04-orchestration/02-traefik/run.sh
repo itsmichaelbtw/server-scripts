@@ -15,12 +15,12 @@ print_script_header
 validate_environment
 
 if ! command -v k3s &>/dev/null; then
-  echo -e "${RED}[ERROR] k3s not installed. Please run 01-k3s first.${RESET}"
+  echo_red "[ERROR] k3s not installed. Please run 01-k3s first."
   exit 1
 fi
 
 if ! systemctl is-active --quiet k3s; then
-  echo -e "${RED}[ERROR] k3s service is not running. Please start k3s.${RESET}"
+  echo_red "[ERROR] k3s service is not running. Please start k3s."
   exit 1
 fi
 
@@ -37,7 +37,7 @@ echo ""
 export CF_API_TOKEN
 
 if ! command -v helm &>/dev/null; then
-  echo -e "${YELLOW}Installing Helm...${RESET}"
+  echo_yellow "Installing Helm..."
   curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 fi
 
@@ -57,14 +57,14 @@ helm upgrade --install traefik traefik/traefik \
   --namespace "$TRAEFIK_NS" \
   -f "$VALUES_FILE"
 
-echo -e "${GREEN}✓ Traefik installed/upgraded successfully in namespace $TRAEFIK_NS with ACME/Cloudflare DNS.${RESET}"
+echo_green "✓ Traefik installed/upgraded successfully in namespace $TRAEFIK_NS with ACME/Cloudflare DNS."
 
 if [[ "${ENABLE_DASH^^}" == "Y" ]]; then
-  echo -e "${YELLOW}Access the dashboard using port-forward:${RESET}"
+  echo_yellow "Access the dashboard using port-forward:"
   echo -e "kubectl --namespace $TRAEFIK_NS port-forward service/traefik 8080:80"
   
-  echo -e "${YELLOW}Note: After starting port-forward, the dashboard will be accessible at:${RESET}"
+  echo_yellow "Note: After starting port-forward, the dashboard will be accessible at:"
   display_service_url "Traefik Dashboard" "8080"
 fi
 
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

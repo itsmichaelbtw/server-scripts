@@ -23,12 +23,12 @@ CRON_UI_DIR="${CRON_UI_DIR:-/srv/crontab-ui}"
 mkdir -p "$CRON_UI_DIR"
 
 if docker ps -a --format '{{.Names}}' | grep -q '^crontab-ui$'; then
-  echo -e "${YELLOW}Stopping and removing existing Crontab-UI container...${RESET}"
+  echo_yellow "Stopping and removing existing Crontab-UI container..."
   docker stop crontab-ui
   docker rm crontab-ui
 fi
 
-echo -e "${YELLOW}Deploying Crontab-UI container...${RESET}"
+echo_yellow "Deploying Crontab-UI container..."
 
 docker run -d \
   --name crontab-ui \
@@ -38,4 +38,4 @@ docker run -d \
   alseambusher/crontab-ui
 
 display_service_url "Crontab-UI" "$CRON_UI_PORT"
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo_green "✓ Script ${SCRIPT_NAME} finished successfully.\n"

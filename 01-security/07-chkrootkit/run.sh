@@ -14,16 +14,16 @@ SCRIPT_DESC="Install Chkrootkit, run initial rootkit scan, and optionally schedu
 print_script_header
 validate_environment
 
-echo -e "${YELLOW}Installing chkrootkit...${RESET}"
+echo_yellow "Installing chkrootkit..."
 apt update -y
 apt install -y chkrootkit
 
 CHK_LOG="/var/log/chkrootkit.log"
-echo -e "${YELLOW}Running initial Chkrootkit scan...${RESET}"
+echo_yellow "Running initial Chkrootkit scan..."
 chkrootkit | tee "$CHK_LOG"
 
-echo -e "${GREEN}✓ Chkrootkit scan complete. Results saved to ${CHK_LOG}.${RESET}"
+echo_green "✓ Chkrootkit scan complete. Results saved to ${CHK_LOG}."
 
 setup_cron_job "chkrootkit | tee -a $CHK_LOG" "0 3 * * *"
 
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n" 
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n" 

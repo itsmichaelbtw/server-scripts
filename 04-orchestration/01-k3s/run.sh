@@ -23,7 +23,7 @@ done
 read -rp "Enter node name (hostname) [$(hostname)]: " NODE_NAME
 NODE_NAME="${NODE_NAME:-$(hostname)}"
 
-echo -e "${YELLOW}Installing k3s...${RESET}"
+echo_yellow "Installing k3s..."
 
 if [[ "$K3S_ROLE" == "server" ]]; then
   curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable=traefik --node-name $NODE_NAME" sh -
@@ -41,14 +41,14 @@ if id "$DEPLOY_USER" &>/dev/null; then
   chown -R "$DEPLOY_USER":"$DEPLOY_USER" "$KUBECONFIG_DIR"
   chmod 600 "$KUBECONFIG_DIR/config"
   echo "export KUBECONFIG=$KUBECONFIG_DIR/config" >> "/home/$DEPLOY_USER/.bashrc"
-  echo -e "${GREEN}✓ kubectl configured for user $DEPLOY_USER${RESET}"
+  echo_green "✓ kubectl configured for user $DEPLOY_USER"
 else
-  echo -e "${RED}[WARNING] User $DEPLOY_USER does not exist. Skipping kubectl setup.${RESET}"
+  echo_red "[WARNING] User $DEPLOY_USER does not exist. Skipping kubectl setup."
 fi
 
-echo -e "${YELLOW}Verifying k3s installation...${RESET}"
+echo_yellow "Verifying k3s installation..."
 systemctl status k3s --no-pager
 k3s kubectl get nodes
 
-echo -e "${GREEN}✓ k3s installation complete. Traefik can be installed separately.${RESET}"
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo_green "✓ k3s installation complete. Traefik can be installed separately."
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

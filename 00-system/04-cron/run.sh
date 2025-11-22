@@ -15,21 +15,21 @@ print_script_header
 validate_environment
 
 if ! dpkg -l | grep -q cron; then
-  echo -e "${YELLOW}Cron not found. Installing...${RESET}"
+  echo_yellow "Cron not found. Installing..."
   apt update -y
   apt install -y cron
 fi
 
-echo -e "${YELLOW}Enabling cron service...${RESET}"
+echo_yellow "Enabling cron service..."
 systemctl enable cron
 
-echo -e "${YELLOW}Starting cron service...${RESET}"
+echo_yellow "Starting cron service..."
 systemctl restart cron
 
 if systemctl is-active --quiet cron; then
-  echo -e "${GREEN}✓ Cron service is running.${RESET}"
+  echo_green "✓ Cron service is running."
 else
-  echo -e "${RED}[ERROR] Cron service is not running.${RESET}"
+  echo_red "[ERROR] Cron service is not running."
 fi
 
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

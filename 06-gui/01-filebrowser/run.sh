@@ -23,12 +23,12 @@ prompt_for_port "Enter port for FileBrowser GUI" "8080"
 FB_PORT="$PORT_REPLY"
 
 if docker ps -a --format '{{.Names}}' | grep -q '^filebrowser$'; then
-  echo -e "${YELLOW}Stopping and removing existing FileBrowser container...${RESET}"
+  echo_yellow "Stopping and removing existing FileBrowser container..."
   docker stop filebrowser
   docker rm filebrowser
 fi
 
-echo -e "${YELLOW}Deploying FileBrowser container...${RESET}"
+echo_yellow "Deploying FileBrowser container..."
 
 docker run -d \
   --name filebrowser \
@@ -43,4 +43,4 @@ docker run -d \
   --no-auth
 
 display_service_url "FileBrowser" "$FB_PORT"
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

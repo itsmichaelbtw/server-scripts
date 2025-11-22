@@ -14,7 +14,7 @@ SCRIPT_DESC="Detect, format, and mount additional non-RAID disks with proper opt
 print_script_header
 validate_environment
 
-echo -e "${YELLOW}Detecting unmounted disks...${RESET}"
+echo_yellow "Detecting unmounted disks..."
 
 ALL_DISKS=($(lsblk -dn -o NAME,TYPE,MOUNTPOINT | grep 'disk' | awk '{print $1}'))
 RAID_DISKS=($(lsblk -dn -o NAME,TYPE,ROTA | grep md | awk '{print $1}'))
@@ -37,11 +37,11 @@ for DISK in "${ALL_DISKS[@]}"; do
 done
 
 if [[ ${#UNMOUNTED_DISKS[@]} -eq 0 ]]; then
-  echo -e "${GREEN}No unmounted non-RAID disks detected. Nothing to do.${RESET}"
+  echo_green "No unmounted non-RAID disks detected. Nothing to do."
   exit 0
 fi
 
-echo -e "${GREEN}Detected unmounted non-RAID disks: ${UNMOUNTED_DISKS[*]}${RESET}"
+echo_green "Detected unmounted non-RAID disks: ${UNMOUNTED_DISKS[*]}"
 
 for DISK in "${UNMOUNTED_DISKS[@]}"; do
   DEVICE="/dev/$DISK"

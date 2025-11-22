@@ -14,19 +14,19 @@ SCRIPT_DESC="Install sysstat utilities (iostat, mpstat, sar) and enable periodic
 print_script_header
 validate_environment
 
-echo -e "${YELLOW}Installing sysstat package...${RESET}"
+echo_yellow "Installing sysstat package..."
 apt update -y
 apt install -y sysstat
 
-echo -e "${YELLOW}Enabling sysstat data collection...${RESET}"
+echo_yellow "Enabling sysstat data collection..."
 sed -i 's/ENABLED="false"/ENABLED="true"/g' /etc/default/sysstat
 systemctl enable sysstat
 systemctl restart sysstat
 
-echo -e "${YELLOW}Verifying sysstat installation...${RESET}"
+echo_yellow "Verifying sysstat installation..."
 iostat -x 1 3
 mpstat 1 3
 sar -n DEV 1 3
 
-echo -e "${GREEN}✓ sysstat installation and configuration complete.${RESET}"
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo_green "✓ sysstat installation and configuration complete."
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

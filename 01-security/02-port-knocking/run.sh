@@ -14,7 +14,7 @@ SCRIPT_DESC="Install and configure knockd for port-knocking protected services (
 print_script_header
 validate_environment
 
-echo -e "${YELLOW}Installing knockd...${RESET}"
+echo_yellow "Installing knockd..."
 apt install -y knockd
 
 prompt_for_port "Enter the port to open after knock sequence (e.g., SSH port)" 22
@@ -30,7 +30,7 @@ for i in 1 2 3; do
       KNOCK_SEQ+=("$PORT")
       break
     else
-      echo -e "${RED}Error: Port $PORT already used in knock sequence. Choose a unique port.${RESET}"
+      echo_red "Error: Port $PORT already used in knock sequence. Choose a unique port."
     fi
   done
 done
@@ -47,11 +47,11 @@ render_template_config "$TEMPLATE_FILE" "$TARGET_FILE" 600 \
   -e "s|{{KNOCK_3}}|${KNOCK_SEQ[2]}|g" \
   -e "s|{{TARGET_PORT}}|$TARGET_PORT|g"
 
-echo -e "${YELLOW}Configuring knockd service...${RESET}"
+echo_yellow "Configuring knockd service..."
 sed -i "s/^START_KNOCKD=.*/START_KNOCKD=$ENABLE_DAEMON/" /etc/default/knockd
 
 systemctl enable knockd
 systemctl restart knockd
 
-echo -e "${GREEN}✓ knockd service configured and running.${RESET}"
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo_green "✓ knockd service configured and running."
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

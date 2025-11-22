@@ -14,19 +14,19 @@ SCRIPT_DESC="Install and enable AppArmor for mandatory access control."
 print_script_header
 validate_environment
 
-echo -e "${YELLOW}Installing AppArmor and utilities...${RESET}"
+echo_yellow "Installing AppArmor and utilities..."
 apt update -y
 apt install -y apparmor apparmor-utils
 
-echo -e "${YELLOW}Enabling AppArmor service...${RESET}"
+echo_yellow "Enabling AppArmor service..."
 systemctl enable apparmor
 systemctl start apparmor
 
-echo -e "${YELLOW}Loading default AppArmor profiles...${RESET}"
+echo_yellow "Loading default AppArmor profiles..."
 apparmor_parser -r /etc/apparmor.d/* || true
 
-echo -e "${YELLOW}AppArmor service status:${RESET}"
+echo_yellow "AppArmor service status:"
 systemctl status apparmor --no-pager
 
-echo -e "${GREEN}✓ AppArmor installation and enablement complete.${RESET}"
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo_green "✓ AppArmor installation and enablement complete."
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

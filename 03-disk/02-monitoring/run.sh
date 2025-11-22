@@ -14,31 +14,31 @@ SCRIPT_DESC="Install disk monitoring tools, run initial health checks, and optio
 print_script_header
 validate_environment
 
-echo -e "${YELLOW}Installing smartmontools, sysstat, and other utilities...${RESET}"
+echo_yellow "Installing smartmontools, sysstat, and other utilities..."
 apt update -y
 apt install -y smartmontools sysstat hdparm iotop lsscsi
 
-echo -e "${YELLOW}Enabling SMART monitoring on all disks...${RESET}"
+echo_yellow "Enabling SMART monitoring on all disks..."
 DISKS=($(lsblk -dn -o NAME,TYPE | grep 'disk' | awk '{print $1}'))
 
 for DISK in "${DISKS[@]}"; do
   DEVICE="/dev/$DISK"
   if smartctl -i "$DEVICE" | grep -q "SMART support is: Enabled"; then
-    echo -e "${GREEN}SMART already enabled on $DEVICE${RESET}"
+    echo_green "SMART already enabled on $DEVICE"
   else
-    echo -e "${YELLOW}Enabling SMART on $DEVICE...${RESET}"
+    echo_yellow "Enabling SMART on $DEVICE..."
     smartctl --smart=on --offlineauto=on --saveauto=on "$DEVICE"
   fi
 done
 
-echo -e "${YELLOW}Running initial SMART health check...${RESET}"
+echo_yellow "Running initial SMART health check..."
 for DISK in "${DISKS[@]}"; do
   DEVICE="/dev/$DISK"
   echo -e "\nSMART report for $DEVICE:"
   smartctl -H "$DEVICE"
 done
 
-echo -e "${YELLOW}Ensuring smartd service is enabled and running...${RESET}"
+echo_yellow "Ensuring smartd service is enabled and running..."
 
 if command -v systemctl &> /dev/null; then
   systemctl enable smartd || true
@@ -47,12 +47,13 @@ elif command -v service &> /dev/null; then
   service smartd enable || true
   service smartd start || true
 else
-  echo -e "${RED}Error: Unable to manage smartd service. Please enable it manually.${RESET}"
+  echo_red "Error: Unable to manage smartd service. Please enable it manually."
 fi
 
 DISK_LOG="/var/log/disk-monitoring.log"
 
-echo -e "\n${YELLOW}Running initial disk usage and I/O stats...${RESET}"
+echo ""
+echo_yellow "Running initial disk usage and I/O stats..."
 {
   echo -e "\n==== Disk Monitoring Run: $(date) ===="
   echo "Disk usage summary:"
@@ -61,7 +62,7 @@ echo -e "\n${YELLOW}Running initial disk usage and I/O stats...${RESET}"
   iostat -x 1 3
 } | tee -a "$DISK_LOG"
 
-echo -e "${GREEN}✓ Initial disk monitoring complete. Output saved to ${DISK_LOG}.${RESET}"
+echo_green "✓ Initial disk monitoring complete. Output saved to ${DISK_LOG}."
 
 prompt_yes_no "Do you want to schedule disk monitoring via CRON?" "Y"
 
@@ -72,9 +73,9 @@ if [[ "$REPLY" == "Y" ]]; then
 
   (crontab -l 2>/dev/null; echo "$CRON_PATTERN $CRON_CMD") | crontab -
 
-  echo -e "${GREEN}✓ Disk monitoring scheduled via CRON: ${CRON_PATTERN}${RESET}"
+  echo_green "✓ Disk monitoring scheduled via CRON: ${CRON_PATTERN}"
 else
-  echo -e "${YELLOW}CRON scheduling skipped.${RESET}"
+  echo_yellow "CRON scheduling skipped."
 fi
 
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

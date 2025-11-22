@@ -15,7 +15,7 @@ print_script_header
 validate_environment
 ensure_docker
 
-echo -e "${YELLOW}Preparing Homer directory structure...${RESET}"
+echo_yellow "Preparing Homer directory structure..."
 DATA_DIR="/opt/homer"
 CONFIG_DIR="$DATA_DIR/config"
 ASSETS_DIR="$DATA_DIR/assets"
@@ -26,21 +26,21 @@ TEMPLATE_FILE="$SCRIPT_DIR/config.yml"
 CONFIG_FILE="$CONFIG_DIR/config.yml"
 
 if [[ ! -f "$TEMPLATE_FILE" ]]; then
-  echo -e "${RED}Error: Missing template file at: $TEMPLATE_FILE${RESET}"
+  echo_red "Error: Missing template file at: $TEMPLATE_FILE"
   exit 1
 fi
 
 if [[ ! -f "$CONFIG_FILE" ]]; then
-  echo -e "${YELLOW}Copying Homer template configuration...${RESET}"
+  echo_yellow "Copying Homer template configuration..."
   cp "$TEMPLATE_FILE" "$CONFIG_FILE"
 else
-  echo -e "${GREEN}Existing Homer config.yml found — not overwriting.${RESET}"
+  echo_green "Existing Homer config.yml found — not overwriting."
 fi
 
-echo -e "${YELLOW}Pulling and running Homer Docker container...${RESET}"
+echo_yellow "Pulling and running Homer Docker container..."
 
 if docker ps -a --format '{{.Names}}' | grep -q '^homer$'; then
-  echo -e "${YELLOW}Existing Homer container detected — rebuilding...${RESET}"
+  echo_yellow "Existing Homer container detected — rebuilding..."
   docker rm -f homer >/dev/null 2>&1 || true
 fi
 
@@ -56,5 +56,5 @@ docker run -d \
   b4bz/homer:latest
 
 display_service_url "Homer" "$HOMER_PORT"
-echo -e "${GREEN}Editable configuration: $CONFIG_FILE${RESET}"
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo_green "Editable configuration: $CONFIG_FILE"
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

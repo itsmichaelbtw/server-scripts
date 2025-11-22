@@ -14,7 +14,7 @@ SCRIPT_DESC="Install general-purpose utilities, system information tools, and CR
 print_script_header
 validate_environment
 
-echo -e "${YELLOW}Installing utilities...${RESET}"
+echo_yellow "Installing utilities..."
 apt update -y
 apt install -y \
   curl \
@@ -36,7 +36,7 @@ apt install -y \
   dmidecode \
   lshw
 
-echo -e "${YELLOW}Verifying installation...${RESET}"
+echo_yellow "Verifying installation..."
 
 echo -e "\ncurl version:"
 curl --version | head -n 1
@@ -68,30 +68,30 @@ dpkg -l | grep mailutils || echo "mailutils installed"
 echo -e "\nneofetch installation check:"
 dpkg -l | grep neofetch || echo "neofetch installed"
 
-echo -e "${GREEN}✓ Utility installation complete.${RESET}"
+echo_green "✓ Utility installation complete."
 
-echo -e "${YELLOW}\n==== System Information ====${RESET}"
-echo -e "${BLUE}OS & Kernel:${RESET}"
+echo_yellow "\n==== System Information ===="
+echo_blue "OS & Kernel:"
 lsb_release -a
 uname -r
 
-echo -e "${BLUE}\nCPU Info:${RESET}"
+echo_blue "\nCPU Info:"
 lscpu
 
-echo -e "${BLUE}\nMemory Info:${RESET}"
+echo_blue "\nMemory Info:"
 free -h
 
-echo -e "${BLUE}\nDisk Usage:${RESET}"
+echo_blue "\nDisk Usage:"
 df -h
 
-echo -e "${BLUE}\nTop 5 Largest Mounts:${RESET}"
+echo_blue "\nTop 5 Largest Mounts:"
 du -h / 2>/dev/null | sort -rh | head -n 5
 
-echo -e "${BLUE}\nNetwork Interfaces & IPs:${RESET}"
+echo_blue "\nNetwork Interfaces & IPs:"
 ip -brief addr
 
-echo -e "${BLUE}\nOptional Neofetch Overview:${RESET}"
+echo_blue "\nOptional Neofetch Overview:"
 neofetch --stdout
 
-echo -e "${GREEN}✓ System information displayed successfully.${RESET}"
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo_green "✓ System information displayed successfully."
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

@@ -50,13 +50,14 @@ while true; do
   fi
 done
 
-echo -e "\n${YELLOW}Installing Fail2Ban...${RESET}"
+echo ""
+echo_yellow "Installing Fail2Ban..."
 apt install -y fail2ban
 
 systemctl enable fail2ban
 systemctl start fail2ban
 
-echo -e "${GREEN}✓ Fail2Ban installed and service started.${RESET}"
+echo_green "✓ Fail2Ban installed and service started."
 
 TEMPLATE_FILE="$SCRIPT_DIR/jail.local"
 TARGET_FILE="/etc/fail2ban/jail.local"
@@ -67,8 +68,8 @@ render_template_config "$TEMPLATE_FILE" "$TARGET_FILE" 600 \
   -e "s|{{FIND_TIME}}|$FIND_TIME|g" \
   -e "s|{{MAX_RETRIES}}|$MAX_RETRIES|g"
 
-echo -e "${YELLOW}Reloading Fail2Ban...${RESET}"
+echo_yellow "Reloading Fail2Ban..."
 systemctl restart fail2ban
 
-echo -e "${GREEN}✓ Fail2Ban configuration applied successfully.${RESET}"
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo_green "✓ Fail2Ban configuration applied successfully."
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

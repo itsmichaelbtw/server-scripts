@@ -16,12 +16,12 @@ validate_environment
 ensure_docker
 
 if docker ps -a --format '{{.Names}}' | grep -q '^netdata$'; then
-  echo -e "${YELLOW}Stopping and removing existing NetData container...${RESET}"
+  echo_yellow "Stopping and removing existing NetData container..."
   docker stop netdata
   docker rm netdata
 fi
 
-echo -e "${YELLOW}Deploying NetData container...${RESET}"
+echo_yellow "Deploying NetData container..."
 
 prompt_for_port "Enter port for NetData dashboard" "19999"
 NETDATA_PORT="$PORT_REPLY"
@@ -43,4 +43,4 @@ docker run -d \
   netdata/netdata
 
 display_service_url "NetData" "$NETDATA_PORT"
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}\n"
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

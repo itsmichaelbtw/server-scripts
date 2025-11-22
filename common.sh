@@ -10,6 +10,38 @@ BLUE="\033[1;34m"
 RED="\033[1;31m"
 RESET="\033[0m"
 
+# Function to print text in green
+# Usage: echo_green "Success message"
+# Example:
+#   echo_green "✓ Operation completed"
+echo_green() {
+  echo -e "${GREEN}$*${RESET}"
+}
+
+# Function to print text in yellow
+# Usage: echo_yellow "Warning message"
+# Example:
+#   echo_yellow "⚠ Please review this"
+echo_yellow() {
+  echo -e "${YELLOW}$*${RESET}"
+}
+
+# Function to print text in blue
+# Usage: echo_blue "Info message"
+# Example:
+#   echo_blue "ℹ Processing..."
+echo_blue() {
+  echo -e "${BLUE}$*${RESET}"
+}
+
+# Function to print text in red
+# Usage: echo_red "Error message"
+# Example:
+#   echo_red "[ERROR] Something failed"
+echo_red() {
+  echo -e "${RED}$*${RESET}"
+}
+
 # Function to check if running on macOS
 # Usage: is_macos && echo "This is macOS"
 # Example:

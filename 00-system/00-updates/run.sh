@@ -14,21 +14,21 @@ SCRIPT_DESC="Update system packages and enable unattended upgrades for security.
 print_script_header
 validate_environment
 
-echo -e "${YELLOW}Step 1: Updating package lists...${RESET}"
+echo_yellow "Step 1: Updating package lists..."
 apt update -y
 
-echo -e "${YELLOW}Step 2: Upgrading installed packages...${RESET}"
+echo_yellow "Step 2: Upgrading installed packages..."
 apt upgrade -y
 
-echo -e "${YELLOW}Step 3: Installing unattended-upgrades...${RESET}"
+echo_yellow "Step 3: Installing unattended-upgrades..."
 apt install -y unattended-upgrades apt-listchanges
 
-echo -e "${YELLOW}Step 4: Configuring unattended-upgrades...${RESET}"
+echo_yellow "Step 4: Configuring unattended-upgrades..."
 dpkg-reconfigure -f noninteractive unattended-upgrades
 
-echo -e "${YELLOW}Step 5: Enabling and starting unattended-upgrades service...${RESET}"
+echo_yellow "Step 5: Enabling and starting unattended-upgrades service..."
 systemctl enable --now unattended-upgrades
 
-echo -e "${GREEN}✓ System updates complete and unattended-upgrades enabled.${RESET}\n"
+echo_green "✓ System updates complete and unattended-upgrades enabled.\n"
 
-echo -e "${GREEN}Script ${SCRIPT_NAME} finished successfully.${RESET}"
+echo_green "Script ${SCRIPT_NAME} finished successfully."
