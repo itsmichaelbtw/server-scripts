@@ -27,6 +27,16 @@ Scripts are designed to be executed in order, designated by their numeric prefix
 - `sudo` privileges required for all scripts
 - Run scripts individually or execute master scripts to prompt for subscripts
 
+**Getting scripts to your server:**
+
+Since fresh servers may not have `git` installed, use `copy.sh` to transfer the toolkit via SCP:
+
+```bash
+./copy.sh  # Interactive script to upload via SCP
+```
+
+This prompts for server IP, SSH credentials, and remote path, then uses tar to package and transfer all files. Once on the server, scripts are ready to execute.
+
 **Example execution order:**
 ```bash
 sudo ./00-system/run.sh          # System foundation
