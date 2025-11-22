@@ -10,8 +10,7 @@ BLUE="\033[1;34m"
 RED="\033[1;31m"
 RESET="\033[0m"
 
-
-## Function to check if running on macOS
+# Function to check if running on macOS
 # Usage: is_macos && echo "This is macOS"
 # Example:
 #   if is_macos; then echo "macOS detected"; fi
@@ -19,15 +18,15 @@ is_macos() {
   [[ "$(uname -s)" == "Darwin" ]]
 }
 
-## Function to check if running on Ubuntu
+# Function to check if running on Ubuntu
 # Usage: is_ubuntu && echo "This is Ubuntu"
 # Example:
 #   if is_ubuntu; then echo "Ubuntu detected"; fi
 is_ubuntu() {
-  [[ -f /etc/os-release ]] && grep -qi 'ubuntu' /etc/os-release
+  [[ -f /etc/os-release ]] && grep -qi 'ubuntu' /etc/os-release 2>/dev/null
 }
 
-## Function to check if script is run with root privileges
+# Function to check if script is run with root privileges
 # Usage: ensure_root
 # Example:
 #   ensure_root
@@ -40,19 +39,19 @@ ensure_root() {
   fi
 }
 
-## Function to verify the system is running Ubuntu
+# Function to verify the system is running Ubuntu
 # Usage: ensure_ubuntu
 # Example:
 #   ensure_ubuntu
 # Exits with error message if not running on Ubuntu
 ensure_ubuntu() {
-  if ! grep -qi "ubuntu" /etc/os-release; then
+  if ! is_ubuntu; then
     echo -e "${RED}[ERROR] This script is intended for Ubuntu systems only.${RESET}"
     exit 1
   fi
 }
 
-## Function to validate the execution environment
+# Function to validate the execution environment
 # Usage: validate_environment
 # Example:
 #   validate_environment
@@ -63,7 +62,7 @@ validate_environment() {
   echo -e "${GREEN}✓ Environment validated.${RESET}"
 }
 
-## Function to display service URL after deployment
+# Function to display service URL after deployment
 # Usage: display_service_url "Service Name" port_number
 # Example:
 #   display_service_url "MyApp" 8080
@@ -79,7 +78,7 @@ display_service_url() {
   echo -e "${YELLOW}Access the service at: http://$server_ip:$port${RESET}"
 }
 
-## Function to prompt user for yes/no input
+# Function to prompt user for yes/no input
 # Usage: prompt_yes_no "Do you want to enable feature X?" [Y|N]
 # Example:
 #   prompt_yes_no "Continue?" "N"; echo $REPLY
@@ -105,7 +104,7 @@ prompt_yes_no() {
   done
 }
 
-## Function to check if Docker is installed
+# Function to check if Docker is installed
 # Usage: ensure_docker
 # Example:
 #   ensure_docker
@@ -124,7 +123,7 @@ ensure_docker() {
   echo -e "${GREEN}✓ Docker is installed and running.${RESET}"
 }
 
-## Function to prompt for a valid network port number
+# Function to prompt for a valid network port number
 # Usage: prompt_for_port "Enter port for service" [default_port]
 # Example:
 #   prompt_for_port "Enter port" 8080; echo $PORT_REPLY
@@ -147,7 +146,7 @@ prompt_for_port() {
   done
 }
 
-## Function to print script name and description in color
+# Function to print script name and description in color
 # Usage: print_script_header
 # Example:
 #   print_script_header
@@ -160,7 +159,7 @@ print_script_header() {
   fi
 }
 
-## Function to schedule a task via crontab
+# Function to schedule a task via crontab
 # Usage: setup_cron_job "Command to run" ["default schedule"]
 # Example:
 #   setup_cron_job "echo hello" "0 1 * * *"
@@ -193,57 +192,125 @@ setup_cron_job() {
   fi
 }
 
-## Function to dynamically find and run scripts in a directory
+# Function to dynamically find and run scripts in a directory
 # Usage: find_and_run_scripts base_directory
 # Example:
 #   find_and_run_scripts "./00-system"
 # Parameters:
 #   $1: Base directory to search for run.sh scripts
-find_and_run_scripts() {
-  local base_dir="$1"
-  local scripts=()
-  local script_count=0
-  local scripts_run=0
-  local errors_encountered=0
-  
-  echo -e "${YELLOW}Searching for run.sh scripts in: ${base_dir}${RESET}"
-  
-  while IFS= read -r script_path; do
-    if [[ -x "$script_path" ]]; then
-      scripts+=("$script_path")
-      ((script_count++))
-      
-      echo -e "${BLUE}Executing: ${script_path}${RESET}"
-      script_output=$(bash "$script_path" 2>&1)
-      script_status=$?
-      
-      if [[ $script_status -eq 0 ]]; then
-        echo -e "${GREEN}✓ Script ${script_path} completed successfully.${RESET}"
-        ((scripts_run++))
-      else
-        echo -e "${RED}[ERROR] Script ${script_path} failed with exit status $script_status${RESET}"
-        echo -e "${YELLOW}Script output:${RESET}"
-        echo "$script_output"
-        ((errors_encountered++))
-      fi
-    else
-      echo -e "${RED}Found non-executable script: ${script_path} - cannot execute${RESET}"
-      ((errors_encountered++))
-    fi
-  done < <(find "$base_dir" -mindepth 1 -maxdepth 2 -name "run.sh" | sort)
-  
-  echo -e "\n${BLUE}Script Execution Summary:${RESET}"
-  echo -e "Total scripts found:    ${script_count}"
-  echo -e "Scripts successfully run: ${scripts_run}"
-  echo -e "Errors encountered:     ${errors_encountered}"
-  
-  if [[ $script_count -eq 0 ]]; then
-    echo -e "${RED}[ERROR] No run.sh scripts found in ${base_dir}.${RESET}"
-    return 1
-  elif [[ $errors_encountered -gt 0 ]]; then
-    echo -e "${RED}[WARNING] Some scripts failed during execution.${RESET}"
-    return 1
+execute_run_sh() {
+  local base_dir script_path run_files rel_path
+
+  script_path="$(cd "$(dirname "${BASH_SOURCE[1]}")" && pwd)/$(basename "${BASH_SOURCE[1]}")"
+  base_dir="$(dirname "$script_path")"
+
+  local rel_base_dir rel_script_path
+  rel_base_dir="$base_dir"
+  rel_script_path="$script_path"
+  [[ "$base_dir" == "$PWD"* ]] && rel_base_dir=".${base_dir#$PWD}"
+  [[ "$script_path" == "$PWD"* ]] && rel_script_path=".${script_path#$PWD}"
+
+  echo -e "${YELLOW}Searching for 'run.sh' files in $rel_base_dir (excluding $rel_script_path)...${RESET}\n"
+
+  run_files=$(find "$base_dir" -type f -name "run.sh" ! -path "$script_path" | sort)
+  if [[ -z "$run_files" ]]; then
+    echo -e "${RED}No run.sh files found.${RESET}"
+    return
   fi
-  
-  return 0
+
+  echo -e "${BLUE}Found the following run.sh files:${RESET}\n"
+  while IFS= read -r file; do
+    rel_path="${file#$base_dir/}"
+    echo -e "${YELLOW}- $rel_path${RESET}"
+  done <<< "$run_files"
+  echo ""
+
+  while IFS= read -r file; do
+    rel_path="${file#$base_dir/}"
+    prompt_yes_no "Do you want to execute '$rel_path'?" "N"
+    if [[ "$REPLY" == "Y" ]]; then
+      echo -e "${YELLOW}Executing $rel_path ...${RESET}"
+      bash "$file"
+    else
+      echo -e "${YELLOW}Skipping $rel_path.${RESET}"
+    fi
+  done <<< "$run_files"
+
+  echo -e "${GREEN}All done.${RESET}"
+}
+
+# Function to backup a config file if it exists
+# Usage: backup_config_file "/etc/ssh/sshd_config"
+# Example:
+#   backup_config_file "/etc/ssh/sshd_config"
+backup_config_file() {
+  local target_file="$1"
+  if [[ -f "$target_file" ]]; then
+    local backup_file="${target_file}.backup-$(date +%Y%m%d-%H%M%S)"
+    cp "$target_file" "$backup_file"
+    echo -e "${GREEN}✓ Backup created at: $backup_file${RESET}"
+  fi
+}
+
+# Function to validate a config file and clean up temp files
+# Usage: validate_and_cleanup <temp_file> <target_file> <perms> [<validate_cmd>]
+# Example:
+#   validate_and_cleanup "$temp_output" "/etc/ssh/sshd_config" 600 "sshd -t -f"
+validate_and_cleanup() {
+  local temp_file="$1"
+  local target_file="$2"
+  local perms="$3"
+  local validate_cmd="$4"
+
+  if [[ -n "$validate_cmd" ]]; then
+    if ! $validate_cmd "$temp_file"; then
+      echo -e "${RED}[ERROR] Validation failed for $temp_file. Not applying config.${RESET}"
+      rm -f "$temp_file"
+      exit 1
+    fi
+    echo -e "${GREEN}✓ Config validated successfully.${RESET}"
+  fi
+
+  cp "$temp_file" "$target_file"
+  chmod "$perms" "$target_file"
+  rm -f "$temp_file"
+  echo -e "${GREEN}✓ Applied new config: $target_file${RESET}"
+}
+
+# Function to render a template config, apply sed substitutions, backup, and install
+# Usage: render_template_config <template> <target> <chmod> <sed_expr1> [<sed_expr2> ...] [--validate "validate_cmd"]
+# Example:
+#   render_template_config "$SCRIPT_DIR/sshd_config" "/etc/ssh/sshd_config" 600 \
+#     -e "s|{{SSH_PORT}}|$SSH_PORT|g" -e "s|{{DISABLE_PASSWORD}}|$DISABLE_PASSWORD|g" --validate "sshd -t -f"
+render_template_config() {
+  local template_file="$1"
+  local target_file="$2"
+  local perms="$3"
+  shift 3
+
+  local validate_cmd=""
+  local sed_args=()
+  while [[ $# -gt 0 ]]; do
+    if [[ "$1" == "--validate" ]]; then
+      validate_cmd="$2"
+      shift 2
+    else
+      sed_args+=("$1")
+      shift
+    fi
+  done
+
+  if [[ ! -f "$template_file" ]]; then
+    echo -e "${RED}[ERROR] Template file not found: $template_file${RESET}"
+    exit 1
+  fi
+
+  backup_config_file "$target_file"
+
+  local temp_output
+  temp_output=$(mktemp)
+
+  sed "${sed_args[@]}" "$template_file" > "$temp_output"
+
+  validate_and_cleanup "$temp_output" "$target_file" "$perms" "$validate_cmd"
 }
