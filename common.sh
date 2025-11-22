@@ -96,7 +96,7 @@ prompt_yes_no() {
   local prompt_text="$prompt [$([[ $valid_default == Y ]] && echo "Y/n" || echo "y/N")]: "
   
   while true; do
-    read -rp "$prompt_text" REPLY
+    read -rp "$prompt_text" REPLY </dev/tty
     REPLY=${REPLY:-$valid_default}
     case "${REPLY^^}" in
       Y|N) REPLY="${REPLY^^}"; break ;;
@@ -135,7 +135,7 @@ prompt_for_port() {
   local port_value
   
   while true; do
-    read -rp "$prompt (default: $default): " port_value
+    read -rp "$prompt (default: $default): " port_value < /dev/tty
     port_value="${port_value:-$default}"
     
     if [[ "$port_value" =~ ^[0-9]+$ ]] && (( port_value >= 1 && port_value <= 65535 )); then
