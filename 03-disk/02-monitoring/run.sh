@@ -67,7 +67,7 @@ echo_green "✓ Initial disk monitoring complete. Output saved to ${DISK_LOG}."
 prompt_yes_no "Do you want to schedule disk monitoring via CRON?" "Y"
 
 if [[ "$REPLY" == "Y" ]]; then
-  read -rp "Enter CRON schedule (minute hour day month day_of_week) or leave empty for default (*/15 * * * *): " CRON_PATTERN
+  read_from_terminal -rp "Enter CRON schedule (minute hour day month day_of_week) or leave empty for default (*/15 * * * *): " CRON_PATTERN
   CRON_PATTERN="${CRON_PATTERN:-*/15 * * * *}"
   CRON_CMD="{ echo -e '\n==== Disk Monitoring Run: \$(date) ===='; df -h; echo -e '\nI/O statistics summary (iostat):'; iostat -x 1 3; } >> $DISK_LOG 2>&1"
 

@@ -27,11 +27,11 @@ fi
 prompt_yes_no "Do you want to enable the Traefik dashboard?" "Y"
 ENABLE_DASH=$REPLY
 
-read -rp "Enter namespace for Traefik [traefik]: " TRAEFIK_NS
+read_from_terminal -rp "Enter namespace for Traefik [traefik]: " TRAEFIK_NS
 TRAEFIK_NS=${TRAEFIK_NS:-traefik}
 
-read -rp "Enter your email for ACME certificate registration: " ACME_EMAIL
-read -rsp "Enter Cloudflare API Token with DNS edit permissions: " CF_API_TOKEN
+read_from_terminal -rp "Enter your email for ACME certificate registration: " ACME_EMAIL
+read_from_terminal -rsp "Enter Cloudflare API Token with DNS edit permissions: " CF_API_TOKEN
 echo ""
 
 export CF_API_TOKEN

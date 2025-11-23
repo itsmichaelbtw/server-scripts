@@ -31,7 +31,7 @@ else
   ALLOW_HTTPS="false"
 fi
 
-read -rp "Enter any additional ports to allow (comma-separated, or leave blank): " EXTRA_PORTS_RAW
+read_from_terminal -rp "Enter any additional ports to allow (comma-separated, or leave blank): " EXTRA_PORTS_RAW
 IFS=',' read -ra EXTRA_PORTS <<< "${EXTRA_PORTS_RAW}"
 
 echo ""

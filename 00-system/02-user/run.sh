@@ -15,7 +15,7 @@ print_script_header
 validate_environment
 
 while true; do
-  read -rp "Enter username to create: " USER_NAME
+  read_from_terminal -rp "Enter username to create: " USER_NAME
 
   if [[ -z "$USER_NAME" ]]; then
     echo_red "[ERROR] Username cannot be empty."

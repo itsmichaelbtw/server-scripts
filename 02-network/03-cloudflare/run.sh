@@ -21,18 +21,18 @@ if ! command -v cloudflared &>/dev/null; then
   rm /tmp/cloudflared.deb
 fi
 
-read -rp "Enter Cloudflare API token with Tunnel:Create & DNS permissions: " CF_API_TOKEN
+read_from_terminal -rp "Enter Cloudflare API token with Tunnel:Create & DNS permissions: " CF_API_TOKEN
 export CF_API_TOKEN
 
-read -rp "Enter tunnel name (e.g., my-tunnel): " TUNNEL_NAME
-read -rp "Enter hostnames (comma-separated, e.g., app1.example.com,app2.example.com): " HOSTNAMES
+read_from_terminal -rp "Enter tunnel name (e.g., my-tunnel): " TUNNEL_NAME
+read_from_terminal -rp "Enter hostnames (comma-separated, e.g., app1.example.com,app2.example.com): " HOSTNAMES
 
 IFS=',' read -ra HOST_ARRAY <<< "$HOSTNAMES"
 
 declare -a INGRESS_ENTRIES
 
 for HOST in "${HOST_ARRAY[@]}"; do
-  read -rp "Enter local port to expose for $HOST: " PORT
+  read_from_terminal -rp "Enter local port to expose for $HOST: " PORT
   INGRESS_ENTRIES+=("  - hostname: $HOST\n    service: http://localhost:$PORT")
 done
 

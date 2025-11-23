@@ -15,7 +15,7 @@ print_script_header
 validate_environment
 ensure_docker
 
-read -rp "Enter host directory to serve (default: /srv/files): " FILE_DIR
+read_from_terminal -rp "Enter host directory to serve (default: /srv/files): " FILE_DIR
 FILE_DIR="${FILE_DIR:-/srv/files}"
 mkdir -p "$FILE_DIR"
 

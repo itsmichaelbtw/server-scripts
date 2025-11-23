@@ -13,20 +13,20 @@ SCRIPT_DESC="Dynamically copy all server scripts to a remote server with verbose
 
 print_script_header
 
-read -rp "Enter remote server IP address: " SERVER_IP
+read_from_terminal -rp "Enter remote server IP address: " SERVER_IP
 if [[ -z "$SERVER_IP" ]]; then
   echo_red "[ERROR] IP address cannot be empty."
   exit 1
 fi
 
-read -rp "Enter username for SSH connection (default: root): " SSH_USER
+read_from_terminal -rp "Enter username for SSH connection (default: root): " SSH_USER
 SSH_USER="${SSH_USER:-root}"
 
 prompt_for_port "Enter SSH port" "22"
 SSH_PORT="$PORT_REPLY"
 
 DEFAULT_REMOTE_DIR="~/server-scripts"
-read -rp "Enter remote directory path (default: $DEFAULT_REMOTE_DIR): " CUSTOM_REMOTE_DIR
+read_from_terminal -rp "Enter remote directory path (default: $DEFAULT_REMOTE_DIR): " CUSTOM_REMOTE_DIR
 REMOTE_DIR="${CUSTOM_REMOTE_DIR:-$DEFAULT_REMOTE_DIR}"
 
 REMOTE_DIR="${REMOTE_DIR%/}"

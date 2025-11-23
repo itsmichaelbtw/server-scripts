@@ -47,5 +47,5 @@ for DISK in "${UNMOUNTED_DISKS[@]}"; do
   DEVICE="/dev/$DISK"
 
   while true; do
-    read -rp "Enter mount point for $DEVICE (e.g., /mnt/data): " MOUNT_POINT
+    read_from_terminal -rp "Enter mount point for $DEVICE (e.g., /mnt/data): " MOUNT_POINT
     if [[ -n "$MOUNT_POINT" ]]; then break_]()]()

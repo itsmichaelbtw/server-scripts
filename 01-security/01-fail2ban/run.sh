@@ -18,7 +18,7 @@ prompt_for_port "Enter SSH port Fail2Ban should protect" 22
 SSH_PORT="$PORT_REPLY"
 
 while true; do
-  read -rp "Enter ban time in seconds (default 600): " BAN_TIME
+  read_from_terminal -rp "Enter ban time in seconds (default 600): " BAN_TIME
   BAN_TIME="${BAN_TIME:-600}"
 
   if [[ "$BAN_TIME" =~ ^[0-9]+$ ]]; then
@@ -29,7 +29,7 @@ while true; do
 done
 
 while true; do
-  read -rp "Enter find time in seconds (default 600): " FIND_TIME
+  read_from_terminal -rp "Enter find time in seconds (default 600): " FIND_TIME
   FIND_TIME="${FIND_TIME:-600}"
 
   if [[ "$FIND_TIME" =~ ^[0-9]+$ ]]; then
@@ -40,7 +40,7 @@ while true; do
 done
 
 while true; do
-  read -rp "Enter number of failed attempts before ban (default 5): " MAX_RETRIES
+  read_from_terminal -rp "Enter number of failed attempts before ban (default 5): " MAX_RETRIES
   MAX_RETRIES="${MAX_RETRIES:-5}"
 
   if [[ "$MAX_RETRIES" =~ ^[0-9]+$ ]]; then

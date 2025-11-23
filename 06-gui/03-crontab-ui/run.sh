@@ -18,7 +18,7 @@ ensure_docker
 prompt_for_port "Enter port for Crontab-UI GUI" "8000"
 CRON_UI_PORT="$PORT_REPLY"
 
-read -rp "Enter host directory to store crontabs/logs (default: /srv/crontab-ui): " CRON_UI_DIR
+read_from_terminal -rp "Enter host directory to store crontabs/logs (default: /srv/crontab-ui): " CRON_UI_DIR
 CRON_UI_DIR="${CRON_UI_DIR:-/srv/crontab-ui}"
 mkdir -p "$CRON_UI_DIR"
 

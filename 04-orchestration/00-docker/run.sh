@@ -37,7 +37,7 @@ apt update -y
 echo_yellow "Installing Docker Engine..."
 apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-read -rp "Enter the username to add to docker group (leave empty to skip): " DOCKER_USER
+read_from_terminal -rp "Enter the username to add to docker group (leave empty to skip): " DOCKER_USER
 if [[ -n "$DOCKER_USER" ]]; then
   usermod -aG docker "$DOCKER_USER"
   echo_green "Added $DOCKER_USER to docker group."

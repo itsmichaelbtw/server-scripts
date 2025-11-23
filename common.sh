@@ -42,6 +42,15 @@ echo_red() {
   echo -e "${RED}$*${RESET}"
 }
 
+# Function to read input from terminal, ensuring stdin is /dev/tty
+# Usage: read_from_terminal [-p "prompt"] [-r] [variable_name]
+# Example:
+#   read_from_terminal -p "Enter value: " -r user_input
+#   echo $user_input
+read_from_terminal() {
+  read "$@" </dev/tty
+}
+
 # Function to check if running on macOS
 # Usage: is_macos && echo "This is macOS"
 # Example:
@@ -127,7 +136,7 @@ prompt_yes_no() {
   local prompt_text="$prompt [$([[ $valid_default == Y ]] && echo "Y/n" || echo "y/N")]: "
   
   while true; do
-    read -rp "$prompt_text" REPLY </dev/tty
+    read_from_terminal -rp "$prompt_text" REPLY
     REPLY=${REPLY:-$valid_default}
     case "${REPLY^^}" in
       Y|N) REPLY="${REPLY^^}"; break ;;
@@ -166,7 +175,7 @@ prompt_for_port() {
   local port_value
   
   while true; do
-    read -rp "$prompt (default: $default): " port_value < /dev/tty
+    read_from_terminal -rp "$prompt (default: $default): " port_value
     port_value="${port_value:-$default}"
     
     if [[ "$port_value" =~ ^[0-9]+$ ]] && (( port_value >= 1 && port_value <= 65535 )); then
@@ -206,7 +215,7 @@ setup_cron_job() {
   prompt_yes_no "Do you want to schedule this job via CRON?" "Y"
   
   if [[ "$REPLY" == "Y" ]]; then
-    read -rp "Enter CRON schedule (minute hour day month day_of_week) or leave empty for default ($default_schedule): " cron_pattern
+    read_from_terminal -rp "Enter CRON schedule (minute hour day month day_of_week) or leave empty for default ($default_schedule): " cron_pattern
     cron_pattern="${cron_pattern:-$default_schedule}"
     
     (crontab -l 2>/dev/null; echo "$cron_pattern $cron_cmd") | crontab -

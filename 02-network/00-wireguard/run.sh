@@ -24,7 +24,7 @@ apt update -y
 apt install -y wireguard wireguard-tools qrencode
 
 while true; do
-  read -rp "Enter WireGuard VPN subnet (e.g., 10.0.0.1/24): " WG_SUBNET
+  read_from_terminal -rp "Enter WireGuard VPN subnet (e.g., 10.0.0.1/24): " WG_SUBNET
   if [[ -n "$WG_SUBNET" ]]; then break; else echo_red "Subnet cannot be empty."; fi
 done
 
@@ -83,12 +83,12 @@ add_client() {
   fi
   
   while true; do
-    read -rp "Enter a label for the new client (e.g., laptop, phone1): " CLIENT_NAME
+    read_from_terminal -rp "Enter a label for the new client (e.g., laptop, phone1): " CLIENT_NAME
     if [[ -n "$CLIENT_NAME" ]]; then break; else echo_red "Client name cannot be empty."; fi
   done
   
   while true; do
-    read -rp "Enter client VPN IP (e.g., 10.0.0.2/24): " CLIENT_IP
+    read_from_terminal -rp "Enter client VPN IP (e.g., 10.0.0.2/24): " CLIENT_IP
     if [[ "$CLIENT_IP" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/[0-9]+$ ]]; then break; else echo_red "Invalid IP format."; fi
   done
   
@@ -96,7 +96,7 @@ add_client() {
   CLIENT_PUBLIC_KEY=$(echo "$CLIENT_PRIVATE_KEY" | wg pubkey)
   
   SERVER_PUBLIC_KEY=$(cat "$WG_DIR/server_public.key")
-  read -rp "Enter server public IP or hostname for client connection: " SERVER_ENDPOINT
+  read_from_terminal -rp "Enter server public IP or hostname for client connection: " SERVER_ENDPOINT
   
   prompt_for_port "Enter server WireGuard port" "$WG_PORT"
   SERVER_PORT="$PORT_REPLY"

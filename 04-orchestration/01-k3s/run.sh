@@ -15,12 +15,12 @@ print_script_header
 validate_environment
 
 while true; do
-  read -rp "Install as server (control plane) or agent? [server/agent]: " K3S_ROLE
+  read_from_terminal -rp "Install as server (control plane) or agent? [server/agent]: " K3S_ROLE
   if [[ "$K3S_ROLE" == "server" || "$K3S_ROLE" == "agent" ]]; then break; fi
   echo "Please enter 'server' or 'agent'."
 done
 
-read -rp "Enter node name (hostname) [$(hostname)]: " NODE_NAME
+read_from_terminal -rp "Enter node name (hostname) [$(hostname)]: " NODE_NAME
 NODE_NAME="${NODE_NAME:-$(hostname)}"
 
 echo_yellow "Installing k3s..."
@@ -28,12 +28,12 @@ echo_yellow "Installing k3s..."
 if [[ "$K3S_ROLE" == "server" ]]; then
   curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable=traefik --node-name $NODE_NAME" sh -
 else
-  read -rp "Enter K3S_SERVER_URL (server URL) for agent: " K3S_SERVER_URL
-  read -rp "Enter K3S_TOKEN (server token) for agent: " K3S_TOKEN
+  read_from_terminal -rp "Enter K3S_SERVER_URL (server URL) for agent: " K3S_SERVER_URL
+  read_from_terminal -rp "Enter K3S_TOKEN (server token) for agent: " K3S_TOKEN
   curl -sfL https://get.k3s.io | K3S_URL="$K3S_SERVER_URL" K3S_TOKEN="$K3S_TOKEN" sh -
 fi
 
-read -rp "Enter the deployment user to use for kubectl (existing user with SSH access): " DEPLOY_USER
+read_from_terminal -rp "Enter the deployment user to use for kubectl (existing user with SSH access): " DEPLOY_USER
 if id "$DEPLOY_USER" &>/dev/null; then
   KUBECONFIG_DIR="/home/$DEPLOY_USER/.kube"
   mkdir -p "$KUBECONFIG_DIR"
