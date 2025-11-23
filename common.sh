@@ -271,7 +271,14 @@ execute_run_sh() {
     prompt_yes_no "Do you want to execute '$rel_path'?" "N"
     if [[ "$REPLY" == "Y" ]]; then
       echo -e "${YELLOW}Executing $rel_path ...${RESET}"
+
+      set +e
       bash "$file"
+      local exit_code=$?
+      set -e
+      if [[ $exit_code -ne 0 ]]; then
+        echo -e "${RED}Warning: $rel_path exited with status $exit_code, continuing...${RESET}"
+      fi
     else
       echo -e "${YELLOW}Skipping $rel_path.${RESET}"
     fi
