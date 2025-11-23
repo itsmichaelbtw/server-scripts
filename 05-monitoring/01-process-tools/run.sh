@@ -31,7 +31,7 @@ htop --version
 echo -e "\natop version:"
 atop -V
 
-echo -e "\nglaces version:"
+echo -e "\nglances version:"
 glances -V
 
 echo_green "✓ Process monitoring tools installed and configured."
