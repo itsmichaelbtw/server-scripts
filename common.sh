@@ -331,6 +331,7 @@ render_template_config() {
 
   local validate_cmd=""
   local sed_args=()
+
   while [[ $# -gt 0 ]]; do
     if [[ "$1" == "--validate" ]]; then
       validate_cmd="$2"
@@ -351,7 +352,11 @@ render_template_config() {
   local temp_output
   temp_output=$(mktemp)
 
-  sed "${sed_args[@]}" "$template_file" > "$temp_output"
+  if [[ ${#sed_args[@]} -gt 0 ]]; then
+    sed "${sed_args[@]}" "$template_file" > "$temp_output"
+  else
+    cp "$template_file" "$temp_output"
+  fi
 
   validate_and_cleanup "$temp_output" "$target_file" "$perms" "$validate_cmd"
 }
