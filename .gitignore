@@ -1,0 +1,17 @@
+# Environment variables - keep local configuration secret
+.env
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+transfer.tar.gz
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

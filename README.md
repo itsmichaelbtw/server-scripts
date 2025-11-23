@@ -37,6 +37,27 @@ Since fresh servers may not have `git` installed, use `copy.sh` to transfer the 
 
 This prompts for server IP, SSH credentials, and remote path, then uses tar to package and transfer all files. Once on the server, scripts are ready to execute.
 
+**Using `.env` to auto-populate SSH details:**
+
+To avoid re-entering SSH credentials for repeated copies, create a `.env` file with your server details:
+
+```bash
+cp .env.example .env
+# Edit .env with your server details
+nano .env
+```
+
+The `.env` file should contain:
+
+```bash
+COPY_SERVER_IP=192.168.1.100
+COPY_SSH_USER=root
+COPY_SSH_PORT=22
+COPY_REMOTE_DIR='~/server-scripts'
+```
+
+When you run `./copy.sh`, it will load these defaults and show them in the prompts. You can still override them interactively. **Important:** Keep `.env` out of version control by never committing it (it's in `.gitignore`).
+
 **Example execution order:**
 ```bash
 sudo ./00-system/run.sh          # System foundation
