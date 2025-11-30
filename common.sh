@@ -268,7 +268,7 @@ execute_run_sh() {
 
   while IFS= read -r file; do
     rel_path="${file#$base_dir/}"
-    prompt_yes_no "Do you want to execute '$rel_path'?" "N"
+    prompt_yes_no "Do you want to execute '$rel_path'?" "Y"
     if [[ "$REPLY" == "Y" ]]; then
       echo -e "${YELLOW}Executing $rel_path ...${RESET}"
 
