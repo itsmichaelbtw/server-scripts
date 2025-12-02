@@ -19,10 +19,18 @@ apt update -y
 apt install -y lynis
 
 LYNIS_LOG="/var/log/lynis.log"
-echo_yellow "Running initial Lynis security audit..."
-lynis audit system | tee "$LYNIS_LOG"
 
-echo_green "✓ Lynis audit complete. Results saved to ${LYNIS_LOG}."
+prompt_yes_no "Run initial Lynis security audit now? (This may take several minutes)" "Y"
+if [[ "$REPLY" == "Y" ]]; then
+  echo_yellow "Running initial Lynis security audit..."
+  if lynis audit system | tee "$LYNIS_LOG" 2>&1; then
+    echo_green "✓ Lynis audit complete. Results saved to ${LYNIS_LOG}."
+  else
+    echo_yellow "[WARNING] Lynis audit encountered an error, but continuing with the rest of the script..."
+  fi
+else
+  echo_yellow "Lynis audit skipped. You can run it manually later with: sudo lynis audit system"
+fi
 
 setup_cron_job "lynis audit system | tee -a $LYNIS_LOG" "0 4 * * *"
 
