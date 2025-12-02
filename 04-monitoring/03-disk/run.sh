@@ -72,18 +72,7 @@ echo_yellow "Running initial disk usage and I/O stats..."
 
 echo_green "Initial disk monitoring complete. Output saved to ${DISK_LOG}."
 
-prompt_yes_no "Do you want to schedule disk monitoring via CRON?" "Y"
+DISK_CRON_CMD="{ echo -e '\n==== Disk Monitoring Run:' \$(date) '===='; df -h; echo -e '\nI/O statistics summary (iostat):'; iostat -x 1 1; } >> $DISK_LOG 2>&1"
+setup_cron_job "$DISK_CRON_CMD" "*/15 * * * *" "disk-monitoring"
 
-if [[ "$REPLY" == "Y" ]]; then
-  read_from_terminal -rp "Enter CRON schedule (minute hour day month day_of_week) or leave empty for default (*/15 * * * *): " CRON_PATTERN
-  CRON_PATTERN="${CRON_PATTERN:-*/15 * * * *}"
-  CRON_CMD="bash -c '{ echo -e \"\n==== Disk Monitoring Run: \$(date) ====\"; df -h; echo -e \"\nI/O statistics summary (iostat):\"; iostat -x 1 1; } >> $DISK_LOG 2>&1'"
-
-  (crontab -l 2>/dev/null; echo "$CRON_PATTERN $CRON_CMD") | crontab -
-
-  echo_green "Disk monitoring scheduled via CRON: ${CRON_PATTERN}"
-else
-  echo_yellow "CRON scheduling skipped."
-fi
-
-echo_green "Script ${SCRIPT_NAME} finished successfully."
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"
