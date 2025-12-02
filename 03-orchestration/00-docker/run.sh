@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # File path: 03-orchestration/00-docker/run.sh
-# Purpose: Install Docker Engine, Docker Compose, and configure Docker service.
+# Purpose: Install Docker Engine, Docker Compose, configure Docker service, and fix UFW-Docker integration.
 
 set -euo pipefail
 
@@ -9,7 +9,7 @@ ROOT_DIR=$(realpath "$SCRIPT_DIR/../..")
 source "$ROOT_DIR/common.sh"
 
 SCRIPT_NAME="00-docker"
-SCRIPT_DESC="Install Docker Engine, Docker Compose, and configure Docker service."
+SCRIPT_DESC="Install Docker Engine, Docker Compose, configure Docker service, and apply UFW-Docker fix."
 
 print_script_header
 validate_environment
@@ -57,5 +57,30 @@ docker compose version
 echo_yellow "Running hello-world container..."
 docker run --rm hello-world
 
-echo_green "Docker installation and configuration complete."
+if does_cmd_exist "ufw" 2>/dev/null; then
+  TEMPLATE_RULES_FILE="$SCRIPT_DIR/after.rules"
+  AFTER_RULES_FILE="/etc/ufw/after.rules"
+
+  echo_yellow "Applying UFW-Docker integration fix..."
+
+  if [[ ! -f "$TEMPLATE_RULES_FILE" ]]; then
+    echo_red "[ERROR] Template UFW rules file not found at: $TEMPLATE_RULES_FILE"
+    echo_yellow "Skipping UFW-Docker fix. Please ensure after.rules exists in the script directory."
+  else
+    if ! grep -q "BEGIN UFW AND DOCKER" "$AFTER_RULES_FILE" 2>/dev/null; then
+      echo_yellow "Appending UFW-Docker rules from template..."
+      cat "$TEMPLATE_RULES_FILE" >> "$AFTER_RULES_FILE"
+      echo_green "UFW-Docker rules added to $AFTER_RULES_FILE"
+    else
+      echo_yellow "UFW-Docker rules already present, skipping..."
+    fi
+  fi
+
+  echo_yellow "Reloading UFW..."
+  ufw reload || echo_yellow "UFW reload failed, you may need to reboot to apply rules"
+else
+  echo_yellow "UFW is not installed. Skipping UFW-Docker integration fix."
+fi
+
+echo_green "Docker installation, configuration, and UFW-Docker fix complete."
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"
