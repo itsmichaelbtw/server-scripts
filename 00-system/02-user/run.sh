@@ -67,4 +67,5 @@ fi
 
 echo ""
 echo_green "✓ User and group configuration complete."
+echo_green "Run 'ssh_keygen.sh' to generate and configure SSH keys for this user"
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"
