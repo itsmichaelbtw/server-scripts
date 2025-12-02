@@ -103,6 +103,21 @@ validate_environment() {
   echo -e "${GREEN}✓ Environment validated.${RESET}"
 }
 
+# Function to load environment variables from .env file
+# Usage: load_env
+# Example:
+#   load_env
+# Loads .env file from the script's directory if it exists
+load_env() {
+  local script_dir="${1:-.}"
+  local env_file="$script_dir/.env"
+  
+  if [[ -f "$env_file" ]]; then
+    echo_blue "Loading configuration from .env file..."
+    source "$env_file"
+  fi
+}
+
 # Function to display service URL after deployment
 # Usage: display_service_url "Service Name" port_number
 # Example:
@@ -211,22 +226,34 @@ setup_cron_job() {
   local cron_cmd="$1"
   local default_schedule="${2:-0 3 * * *}"
   local cron_pattern
-  
+  local error_output
+
   prompt_yes_no "Do you want to schedule this job via CRON?" "Y"
   
   if [[ "$REPLY" == "Y" ]]; then
     read_from_terminal -rp "Enter CRON schedule (minute hour day month day_of_week) or leave empty for default ($default_schedule): " cron_pattern
     cron_pattern="${cron_pattern:-$default_schedule}"
     
-    (crontab -l 2>/dev/null; echo "$cron_pattern $cron_cmd") | crontab -
-    
-    if crontab -l 2>/dev/null | grep -q -F "$cron_cmd"; then
-      echo -e "${GREEN}✓ Job scheduled via CRON: ${cron_pattern}${RESET}"
-      CRON_SETUP_SUCCESS=true
+    local cron_safe="bash -c '$cron_cmd'"
+
+    error_output=$(mktemp)
+    if (crontab -l 2>/dev/null; echo "$cron_pattern $cron_safe") | crontab - 2>"$error_output"; then
+      if crontab -l 2>/dev/null | grep -q -F "$cron_cmd"; then
+        echo -e "${GREEN}✓ Job scheduled via CRON: ${cron_pattern}${RESET}"
+        CRON_SETUP_SUCCESS=true
+      else
+        echo -e "${RED}[ERROR] Failed to add job to crontab.${RESET}"
+        CRON_SETUP_SUCCESS=false
+      fi
     else
       echo -e "${RED}[ERROR] Failed to add job to crontab.${RESET}"
+      if [[ -s "$error_output" ]]; then
+        echo -e "${RED}Error details:${RESET}"
+        cat "$error_output" | sed "s/^/${RED}  /"
+      fi
       CRON_SETUP_SUCCESS=false
     fi
+    rm -f "$error_output"
   else
     echo -e "${YELLOW}CRON scheduling skipped.${RESET}"
     CRON_SETUP_SUCCESS=false
