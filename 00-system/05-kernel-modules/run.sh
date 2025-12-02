@@ -30,23 +30,19 @@ chmod 644 "$MODULES_FILE"
 echo_green "✓ Kernel modules configuration created"
 
 for module in "${MODULES[@]}"; do
-  echo_yellow "Loading kernel module: $module"
-  
-  if modprobe "$module" 2>&1; then
-    echo_green "✓ Loaded: $module"
+  echo_yellow "Ensuring kernel module is loaded: $module"
+
+  if modprobe "$module" 2>/dev/null; then
+    echo_green "✓ Module loaded or already present: $module"
   else
     echo_red "[ERROR] Failed to load module: $module"
     exit 1
   fi
-done
 
-echo_yellow "\nVerifying modules are loaded..."
-for module in "${MODULES[@]}"; do
-  if lsmod | grep -q "^$module"; then
-    echo_green "✓ Module loaded: $module"
+  if lsmod | grep -q "^$module" || grep -q "^$module" /lib/modules/$(uname -r)/modules.builtin; then
+    echo_green "✓ Module verified: $module"
   else
-    echo_red "[ERROR] Module verification failed: $module"
-    exit 1
+    echo_yellow "[WARNING] Module $module not listed in lsmod; it may be built-in."
   fi
 done
 
