@@ -28,5 +28,5 @@ iostat -x 1 3
 mpstat 1 3
 sar -n DEV 1 3
 
-echo_green "✓ sysstat installation and configuration complete."
+echo_green "sysstat installation and configuration complete."
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

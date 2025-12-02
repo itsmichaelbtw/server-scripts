@@ -34,5 +34,5 @@ atop -V
 echo -e "\nglances version:"
 glances -V
 
-echo_green "✓ Process monitoring tools installed and configured."
+echo_green "Process monitoring tools installed and configured."
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

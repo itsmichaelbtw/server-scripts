@@ -33,9 +33,9 @@ find "$ROOT_DIR" -type f -name "run.sh" | while read -r FILE; do
   SED_INPLACE "2s|.*|$NEW_FILEPATH_LINE|" "$FILE"
   SED_INPLACE "s|^SCRIPT_NAME=\".*\"|SCRIPT_NAME=\"$DIR_NAME\"|" "$FILE"
   
-  echo_green "✓ Updated"
+  echo_green "Updated"
 
 done
 
-echo_green "\n✓ All run.sh files updated successfully."
-echo_green "✓ Script ${SCRIPT_NAME} finished successfully.\n"
+echo_green "\nAll run.sh files updated successfully."
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

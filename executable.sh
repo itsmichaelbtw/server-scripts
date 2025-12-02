@@ -21,11 +21,11 @@ find "$ROOT_DIR" -type f -name "run.sh" | while read -r FILE; do
 	REL_PATH="${FILE#$ROOT_DIR/}"
 	echo_blue "Making executable: ${REL_PATH}"
 	if chmod +x "$FILE"; then
-		echo_green "✓ Now executable"
+		echo_green "Now executable"
 	else
 		echo_red "[ERROR] Failed to chmod: $REL_PATH"
 	fi
 done
 
-echo_green "\n✓ All run.sh files are now executable."
-echo_green "✓ Script ${SCRIPT_NAME} finished successfully.\n"
+echo_green "\nAll run.sh files are now executable."
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

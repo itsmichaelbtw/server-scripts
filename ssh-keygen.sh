@@ -62,7 +62,7 @@ PRIVATE_KEY="$SSH_DIR/$KEY_NAME"
 PUBLIC_KEY="$SSH_DIR/$KEY_NAME.pub"
 
 if [[ -f "$PRIVATE_KEY" ]]; then
-  echo_yellow "⚠ Key already exists at: $PRIVATE_KEY"
+  echo_yellow "Key already exists at: $PRIVATE_KEY"
   prompt_yes_no "Overwrite existing key?" "N"
   if [[ "$REPLY" != "Y" ]]; then
     echo_yellow "Skipping key generation. Using existing key."
@@ -77,7 +77,7 @@ if [[ ! -f "$PRIVATE_KEY" ]]; then
   ssh-keygen -t ed25519 -f "$PRIVATE_KEY" -C "$KEY_COMMENT" -N "" 2>&1
   
   if [[ $? -eq 0 ]]; then
-    echo_green "✓ SSH key generated successfully"
+    echo_green "SSH key generated successfully"
     echo_green "  Private key: $PRIVATE_KEY"
     echo_green "  Public key: $PUBLIC_KEY"
   else
@@ -85,7 +85,7 @@ if [[ ! -f "$PRIVATE_KEY" ]]; then
     exit 1
   fi
 else
-  echo_green "✓ Using existing SSH key"
+  echo_green "Using existing SSH key"
 fi
 
 echo_yellow "Setting correct permissions on SSH key files..."
@@ -135,7 +135,7 @@ echo_yellow "Attempting connection (will try public key first, then password).\n
 PUBKEY_CONTENT=$(cat "$PUBLIC_KEY")
 
 if add_public_key_to_remote "$REMOTE_USER" "$AUTH_USER" "$PUBKEY_CONTENT"; then
-  echo_green "✓ Public key added to $REMOTE_USER's authorized_keys"
+  echo_green "Public key added to $REMOTE_USER's authorized_keys"
 else
   echo_red "[ERROR] Failed to add public key to $REMOTE_USER."
   echo_yellow "\nYou can add it manually by running:"
@@ -177,7 +177,7 @@ if grep -q "^Host $CONFIG_ALIAS$" "$SSH_CONFIG"; then
     sed -i '' "${START_LINE},${END_LINE}d" "$SSH_CONFIG"
   else
     echo_yellow "Skipping SSH config update."
-    echo_green "✓ Script completed."
+    echo_green "Script completed."
     exit 0
   fi
 fi
@@ -193,7 +193,7 @@ fi
   echo "    UseKeychain $(is_macos && echo 'yes' || echo 'no')"
 } >> "$SSH_CONFIG"
 
-echo_green "✓ SSH config updated"
+echo_green "SSH config updated"
 echo_green "  Alias: $CONFIG_ALIAS"
 echo_green "  Host: $SERVER_HOST:$REMOTE_PORT"
 echo_green "  User: $REMOTE_USER"
@@ -201,7 +201,7 @@ echo_green "  Identity: $PRIVATE_KEY"
 
 echo_yellow "\nTesting SSH connection..."
 if ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=accept-new -i "$PRIVATE_KEY" -p "$REMOTE_PORT" "$REMOTE_USER@$SERVER_HOST" "echo 'SSH connection successful!'" 2>&1; then
-  echo_green "✓ SSH connection test passed"
+  echo_green "SSH connection test passed"
 else
   echo_yellow "[WARNING] SSH connection test failed. Please verify server details and try connecting manually."
   echo_yellow "You can test manually with: ssh -i $PRIVATE_KEY -p $REMOTE_PORT $REMOTE_USER@$SERVER_HOST"

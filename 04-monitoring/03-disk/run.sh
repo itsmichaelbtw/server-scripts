@@ -70,7 +70,7 @@ echo_yellow "Running initial disk usage and I/O stats..."
   iostat -x 1 1
 } | tee -a "$DISK_LOG"
 
-echo_green "✓ Initial disk monitoring complete. Output saved to ${DISK_LOG}."
+echo_green "Initial disk monitoring complete. Output saved to ${DISK_LOG}."
 
 prompt_yes_no "Do you want to schedule disk monitoring via CRON?" "Y"
 
@@ -81,7 +81,7 @@ if [[ "$REPLY" == "Y" ]]; then
 
   (crontab -l 2>/dev/null; echo "$CRON_PATTERN $CRON_CMD") | crontab -
 
-  echo_green "✓ Disk monitoring scheduled via CRON: ${CRON_PATTERN}"
+  echo_green "Disk monitoring scheduled via CRON: ${CRON_PATTERN}"
 else
   echo_yellow "CRON scheduling skipped."
 fi

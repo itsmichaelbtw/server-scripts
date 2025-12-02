@@ -68,7 +68,7 @@ dpkg -l | grep mailutils || echo "mailutils installed"
 echo -e "\nneofetch installation check:"
 dpkg -l | grep neofetch || echo "neofetch installed"
 
-echo_green "✓ Utility installation complete."
+echo_green "Utility installation complete."
 
 prompt_yes_no "Would you like to print system information?" "Y"
 if [[ "$REPLY" == "Y" ]]; then
@@ -95,7 +95,7 @@ if [[ "$REPLY" == "Y" ]]; then
   echo_blue "\nOptional Neofetch Overview:"
   neofetch --stdout
 
-  echo_green "✓ System information displayed successfully."
+  echo_green "System information displayed successfully."
 fi
 
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

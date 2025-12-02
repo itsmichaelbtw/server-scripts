@@ -78,5 +78,5 @@ echo_yellow "Enabling firewall..."
 ufw --force enable
 
 echo_newline
-echo_green "✓ Firewall configuration complete."
+echo_green "Firewall configuration complete."
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

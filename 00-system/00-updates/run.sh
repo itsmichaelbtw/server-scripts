@@ -29,6 +29,6 @@ dpkg-reconfigure -f noninteractive unattended-upgrades
 echo_yellow "Step 5: Enabling and starting unattended-upgrades service..."
 systemctl enable --now unattended-upgrades
 
-echo_green "✓ System updates complete and unattended-upgrades enabled.\n"
+echo_green "System updates complete and unattended-upgrades enabled.\n"
 
 echo_green "Script ${SCRIPT_NAME} finished successfully."

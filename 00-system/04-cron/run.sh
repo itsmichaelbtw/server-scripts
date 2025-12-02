@@ -27,7 +27,7 @@ echo_yellow "Starting cron service..."
 systemctl restart cron
 
 if systemctl is-active --quiet cron; then
-  echo_green "✓ Cron service is running."
+  echo_green "Cron service is running."
 else
   echo_red "[ERROR] Cron service is not running."
 fi

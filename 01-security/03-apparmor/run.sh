@@ -28,5 +28,5 @@ apparmor_parser -r /etc/apparmor.d/* || true
 echo_yellow "AppArmor service status:"
 systemctl status apparmor --no-pager
 
-echo_green "✓ AppArmor installation and enablement complete."
+echo_green "AppArmor installation and enablement complete."
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

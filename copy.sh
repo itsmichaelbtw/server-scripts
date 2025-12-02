@@ -62,7 +62,7 @@ fi
 
 echo_yellow "\nCreating remote directory structure..."
 ssh -p "$SSH_PORT" "${SSH_USER}@${SERVER_IP}" "mkdir -p $REMOTE_DIR"
-echo_green "✓ Created remote directory"
+echo_green "Created remote directory"
 
 echo_yellow "Copying files to remote server..."
 
@@ -88,13 +88,13 @@ if [[ $TRANSFER_EXIT_STATUS -ne 0 ]]; then
   exit 1
 fi
 
-echo_green "✓ Server scripts successfully copied to ${SSH_USER}@${SERVER_IP}:${REMOTE_DIR}"
+echo_green "Server scripts successfully copied to ${SSH_USER}@${SERVER_IP}:${REMOTE_DIR}"
 
 prompt_yes_no "Make scripts executable on remote system?" "Y"
 if [[ "$REPLY" == "Y" ]]; then
   echo_yellow "Making scripts executable..."
   ssh -p "$SSH_PORT" "${SSH_USER}@${SERVER_IP}" "chmod +x $REMOTE_DIR/*.sh $REMOTE_DIR/*/*.sh $REMOTE_DIR/*/*/*.sh 2>/dev/null || echo 'Some files could not be made executable'"
-  echo_green "✓ Scripts are now executable"
+  echo_green "Scripts are now executable"
 fi
 
-echo_green "✓ Script ${SCRIPT_NAME} finished successfully.\n"
+echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

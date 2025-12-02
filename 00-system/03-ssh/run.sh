@@ -47,12 +47,12 @@ render_template_config "$TEMPLATE_FILE" "$TARGET_FILE" 600 \
 
 echo_yellow "Restarting SSH service..."
 if systemctl restart ssh; then
-  echo_green "✓ SSH restarted successfully."
+  echo_green "SSH restarted successfully."
 else
   echo_red "[ERROR] SSH restart failed. Please restore the previous backup manually if needed."
   exit 1
 fi
 
 echo_newline
-echo_green "✓ SSH configuration complete."
+echo_green "SSH configuration complete."
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

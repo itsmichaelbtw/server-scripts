@@ -57,5 +57,5 @@ docker compose version
 echo_yellow "Running hello-world container..."
 docker run --rm hello-world
 
-echo_green "✓ Docker installation and configuration complete."
+echo_green "Docker installation and configuration complete."
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

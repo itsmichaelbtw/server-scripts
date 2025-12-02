@@ -53,5 +53,5 @@ sed -i "s/^START_KNOCKD=.*/START_KNOCKD=$ENABLE_DAEMON/" /etc/default/knockd
 systemctl enable knockd
 systemctl restart knockd
 
-echo_green "✓ knockd service configured and running."
+echo_green "knockd service configured and running."
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

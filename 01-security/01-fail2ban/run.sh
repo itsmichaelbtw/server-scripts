@@ -57,7 +57,7 @@ apt install -y fail2ban
 systemctl enable fail2ban
 systemctl start fail2ban
 
-echo_green "✓ Fail2Ban installed and service started."
+echo_green "Fail2Ban installed and service started."
 
 TEMPLATE_FILE="$SCRIPT_DIR/jail.local"
 TARGET_FILE="/etc/fail2ban/jail.local"
@@ -71,5 +71,5 @@ render_template_config "$TEMPLATE_FILE" "$TARGET_FILE" 600 \
 echo_yellow "Reloading Fail2Ban..."
 systemctl restart fail2ban
 
-echo_green "✓ Fail2Ban configuration applied successfully."
+echo_green "Fail2Ban configuration applied successfully."
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

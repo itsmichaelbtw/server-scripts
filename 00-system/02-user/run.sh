@@ -40,32 +40,32 @@ echo_newline
 echo_yellow "Step 1: Creating user '${USER_NAME}' if not exists..."
 
 if id "$USER_NAME" &>/dev/null; then
-  echo_green "✓ User '${USER_NAME}' already exists. Skipping creation."
+  echo_green "User '${USER_NAME}' already exists. Skipping creation."
 else
   adduser --disabled-password --gecos "" "$USER_NAME"
-  echo_green "✓ User '${USER_NAME}' created."
+  echo_green "User '${USER_NAME}' created."
 fi
 
 if [[ "$ENABLE_SUDO" == "true" ]]; then
   echo_yellow "Step 2: Adding '${USER_NAME}' to sudo group..."
 
   usermod -aG sudo "$USER_NAME"
-  echo_green "✓ '${USER_NAME}' added to sudo group."
+  echo_green "'${USER_NAME}' added to sudo group."
 
   SUDOERS_FILE="/etc/sudoers.d/90-${USER_NAME}"
 
   if [[ ! -f "$SUDOERS_FILE" ]]; then
     echo "${USER_NAME} ALL=(ALL) ALL" > "$SUDOERS_FILE"
     chmod 440 "$SUDOERS_FILE"
-    echo_green "✓ Sudoers configuration created."
+    echo_green "Sudoers configuration created."
   else
-    echo_green "✓ Sudoers file already exists. Skipping."
+    echo_green "Sudoers file already exists. Skipping."
   fi
 else
   echo_yellow "Skipping sudo setup for '${USER_NAME}'."
 fi
 
 echo_newline
-echo_green "✓ User and group configuration complete."
+echo_green "User and group configuration complete."
 echo_green "Run 'ssh_keygen.sh' to generate and configure SSH keys for this user"
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

@@ -22,5 +22,5 @@ render_template_config "$TEMPLATE_FILE" "$GRUB_FILE" 644
 echo_yellow "Updating GRUB configuration..."
 update-grub
 
-echo_green "✓ GRUB hardening applied successfully."
+echo_green "GRUB hardening applied successfully."
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

@@ -24,7 +24,7 @@ prompt_yes_no "Run initial Lynis security audit now? (This may take several minu
 if [[ "$REPLY" == "Y" ]]; then
   echo_yellow "Running initial Lynis security audit..."
   if lynis audit system | tee "$LYNIS_LOG" 2>&1; then
-    echo_green "✓ Lynis audit complete. Results saved to ${LYNIS_LOG}."
+    echo_green "Lynis audit complete. Results saved to ${LYNIS_LOG}."
   else
     echo_yellow "[WARNING] Lynis audit encountered an error, but continuing with the rest of the script..."
   fi
@@ -32,6 +32,6 @@ else
   echo_yellow "Lynis audit skipped. You can run it manually later with: sudo lynis audit system"
 fi
 
-setup_cron_job "lynis audit system | tee -a $LYNIS_LOG" "0 4 * * *"
+setup_cron_job "lynis audit system | tee -a $LYNIS_LOG" "0 4 * * *" "lynis"
 
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

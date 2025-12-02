@@ -31,7 +31,7 @@ prompt_yes_no "Run initial RKHunter scan now? (This may take several minutes)" "
 if [[ "$REPLY" == "Y" ]]; then
   echo_yellow "Running initial RKHunter scan using the default bundled database..."
   if sudo rkhunter --propupd 2>&1 && sudo rkhunter --check --skip-keypress 2>&1; then
-    echo_green "✓ RKHunter installation, configuration, and initial scan complete."
+    echo_green "RKHunter installation, configuration, and initial scan complete."
   else
     echo_yellow "[WARNING] RKHunter scan encountered an error, but continuing with the rest of the script..."
   fi
@@ -39,6 +39,6 @@ else
   echo_yellow "RKHunter scan skipped. You can run it manually later with: sudo rkhunter --check"
 fi
 
-setup_cron_job "sudo rkhunter --propupd && sudo rkhunter --check --skip-keypress" "30 2 * * *"
+setup_cron_job "sudo rkhunter --propupd && sudo rkhunter --check --skip-keypress" "30 2 * * *" "rkhunter"
 
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

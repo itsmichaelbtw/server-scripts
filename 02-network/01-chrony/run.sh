@@ -27,7 +27,7 @@ echo_yellow "Enabling and starting Chrony service..."
 systemctl enable chrony
 systemctl restart chrony
 
-echo_green "✓ Chrony installation and configuration complete."
+echo_green "Chrony installation and configuration complete."
 
 echo_yellow "Chrony status:"
 systemctl status chrony --no-pager

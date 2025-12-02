@@ -27,20 +27,20 @@ overlay
 EOF
 
 chmod 644 "$MODULES_FILE"
-echo_green "✓ Kernel modules configuration created"
+echo_green "Kernel modules configuration created"
 
 for module in "${MODULES[@]}"; do
   echo_yellow "Ensuring kernel module is loaded: $module"
 
   if modprobe "$module" 2>/dev/null; then
-    echo_green "✓ Module loaded or already present: $module"
+    echo_green "Module loaded or already present: $module"
   else
     echo_red "[ERROR] Failed to load module: $module"
     exit 1
   fi
 
   if lsmod | grep -q "^$module" || grep -q "^$module" /lib/modules/$(uname -r)/modules.builtin; then
-    echo_green "✓ Module verified: $module"
+    echo_green "Module verified: $module"
   else
     echo_yellow "[WARNING] Module $module not listed in lsmod; it may be built-in."
   fi

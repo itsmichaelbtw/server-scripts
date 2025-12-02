@@ -22,5 +22,5 @@ render_template_config "$TEMPLATE_FILE" "$SYSCTL_FILE" 644
 echo_yellow "Reloading sysctl settings..."
 sysctl -p
 
-echo_green "✓ sysctl hardening applied successfully."
+echo_green "sysctl hardening applied successfully."
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

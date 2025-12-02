@@ -41,7 +41,7 @@ if id "$DEPLOY_USER" &>/dev/null; then
   chown -R "$DEPLOY_USER":"$DEPLOY_USER" "$KUBECONFIG_DIR"
   chmod 600 "$KUBECONFIG_DIR/config"
   echo "export KUBECONFIG=$KUBECONFIG_DIR/config" >> "/home/$DEPLOY_USER/.bashrc"
-  echo_green "✓ kubectl configured for user $DEPLOY_USER"
+  echo_green "kubectl configured for user $DEPLOY_USER"
 else
   echo_red "[WARNING] User $DEPLOY_USER does not exist. Skipping kubectl setup."
 fi
@@ -50,5 +50,5 @@ echo_yellow "Verifying k3s installation..."
 systemctl status k3s --no-pager
 k3s kubectl get nodes
 
-echo_green "✓ k3s installation complete. Traefik can be installed separately."
+echo_green "k3s installation complete. Traefik can be installed separately."
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"
