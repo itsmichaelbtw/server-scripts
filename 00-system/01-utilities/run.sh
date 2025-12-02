@@ -34,8 +34,7 @@ apt install -y \
   lsb-release \
   neofetch \
   dmidecode \
-  lshw \
-  grencode
+  lshw
 
 echo_yellow "Verifying installation..."
 
