@@ -380,12 +380,12 @@ execute_run_sh() {
       local EXIT_CODE=$?
       set -e
       if [[ $EXIT_CODE -ne 0 ]]; then
-        echo -e "${RED}Warning: $rel_path exited with status $exit_code, continuing...${RESET}"
+        echo -e "${RED}Warning: $REL_PATH exited with status $EXIT_CODE, continuing...${RESET}"
       fi
     else
-      echo -e "${YELLOW}Skipping $rel_path.${RESET}"
+      echo -e "${YELLOW}Skipping $REL_PATH.${RESET}"
     fi
-  done <<< "$run_files"
+  done <<< "$RUN_FILES"
 
   echo -e "${GREEN}All done.${RESET}"
 }
