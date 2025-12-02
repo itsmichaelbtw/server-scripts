@@ -33,7 +33,7 @@ echo_yellow "Deploying FileBrowser container..."
 docker run -d \
   --name filebrowser \
   --restart=unless-stopped \
-  -p "$FB_PORT:80" \
+  -p 127.0.0.1:"$FB_PORT:80" \
   -v "$FILE_DIR:/srv" \
   -v filebrowser_config:/config \
   -e PUID=$(id -u) \

@@ -49,10 +49,10 @@ HOMER_PORT="$PORT_REPLY"
 
 docker run -d \
   --name homer \
-  -p "$HOMER_PORT:8080" \
+  --restart unless-stopped \
+  -p 127.0.0.1:"$HOMER_PORT:8080" \
   -v "$ASSETS_DIR":/www/assets \
   -v "$CONFIG_DIR":/www/config \
-  --restart unless-stopped \
   b4bz/homer:latest
 
 display_service_url "Homer" "$HOMER_PORT"

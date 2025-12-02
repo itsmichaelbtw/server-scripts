@@ -29,7 +29,7 @@ NETDATA_PORT="$PORT_REPLY"
 docker run -d \
   --name=netdata \
   --restart=unless-stopped \
-  -p "$NETDATA_PORT:19999" \
+  -p 127.0.0.1:"$NETDATA_PORT:19999" \
   -v netdataconfig:/etc/netdata \
   -v netdatalib:/var/lib/netdata \
   -v netdatacache:/var/cache/netdata \
