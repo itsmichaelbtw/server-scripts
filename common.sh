@@ -18,78 +18,10 @@ echo_newline() {
   echo ""
 }
 
-# Function to check if a command exists
-# Usage: does_cmd_exist "command_name"
-# Example:
-#   if does_cmd_exist "docker"; then echo "Docker is installed"; fi
-does_cmd_exist() {
-  local CMD_NAME="$1"
-  if command -v "$CMD_NAME" &>/dev/null; then
-    echo_green "✓ $CMD_NAME is installed"
-    return 0
-  else
-    echo_yellow "⚠ $CMD_NAME is not installed"
-    return 1
-  fi
-}
-
-# Function to require a command and attempt to install if not exists
-# Usage: require_cmd "command_name" [package_name]
-# Example:
-#   require_cmd "docker" "docker.io"
-#   require_cmd "git"
-require_cmd() {
-  local CMD_NAME="$1"
-  local PKG_NAME="${2:-$CMD_NAME}"
-  
-  if command -v "$CMD_NAME" &>/dev/null; then
-    echo_green "✓ $CMD_NAME is already installed"
-    return 0
-  fi
-  
-  echo_yellow "⚠ $CMD_NAME is not installed. Attempting to install $PKG_NAME..."
-  
-  if command -v apt-get &>/dev/null; then
-    apt-get update -qq
-    apt-get install -y "$PKG_NAME" >/dev/null 2>&1 || {
-      echo_red "[ERROR] Failed to install $PKG_NAME via apt-get"
-      return 1
-    }
-  elif command -v yum &>/dev/null; then
-    yum install -y "$PKG_NAME" >/dev/null 2>&1 || {
-      echo_red "[ERROR] Failed to install $PKG_NAME via yum"
-      return 1
-    }
-  else
-    echo_red "[ERROR] No package manager found (apt-get, yum, or brew). Please install $PKG_NAME manually."
-    return 1
-  fi
-  
-  if command -v "$CMD_NAME" &>/dev/null; then
-    echo_green "✓ $CMD_NAME installed successfully"
-    return 0
-  else
-    echo_red "[ERROR] $CMD_NAME installation verification failed"
-    return 1
-  fi
-}
-
-# Function to get the actual user (handles sudo)
-# Usage: ACTUAL_USER=$(get_actual_user)
-# Example:
-#   USER_HOME=$(eval echo "~$(get_actual_user)")
-get_actual_user() {
-  if [[ -n "${SUDO_USER:-}" ]]; then
-    echo "$SUDO_USER"
-  else
-    echo "${USER:-root}"
-  fi
-}
-
 # Function to print text in green
 # Usage: echo_green "Success message"
 # Example:
-#   echo_green "✓ Operation completed"
+#   echo_green "Operation completed"
 echo_green() {
   echo -e "${GREEN}$*${RESET}"
 }
@@ -97,7 +29,7 @@ echo_green() {
 # Function to print text in yellow
 # Usage: echo_yellow "Warning message"
 # Example:
-#   echo_yellow "⚠ Please review this"
+#   echo_yellow "Please review this"
 echo_yellow() {
   echo -e "${YELLOW}$*${RESET}"
 }
@@ -176,7 +108,7 @@ ensure_ubuntu() {
 validate_environment() {
   ensure_root
   ensure_ubuntu
-  echo -e "${GREEN}✓ Environment validated.${RESET}"
+  echo -e "${GREEN}Environment validated.${RESET}"
 }
 
 # Function to load environment variables from .env file
@@ -194,6 +126,74 @@ load_env() {
   fi
 }
 
+# Function to check if a command exists
+# Usage: does_cmd_exist "command_name"
+# Example:
+#   if does_cmd_exist "docker"; then echo "Docker is installed"; fi
+does_cmd_exist() {
+  local CMD_NAME="$1"
+  if command -v "$CMD_NAME" &>/dev/null; then
+    echo_green "$CMD_NAME is installed"
+    return 0
+  else
+    echo_yellow "$CMD_NAME is not installed"
+    return 1
+  fi
+}
+
+# Function to require a command and attempt to install if not exists
+# Usage: require_cmd "command_name" [package_name]
+# Example:
+#   require_cmd "docker" "docker.io"
+#   require_cmd "git"
+require_cmd() {
+  local CMD_NAME="$1"
+  local PKG_NAME="${2:-$CMD_NAME}"
+  
+  if command -v "$CMD_NAME" &>/dev/null; then
+    echo_green "$CMD_NAME is already installed"
+    return 0
+  fi
+  
+  echo_yellow "$CMD_NAME is not installed. Attempting to install $PKG_NAME..."
+  
+  if command -v apt-get &>/dev/null; then
+    apt-get update -qq
+    apt-get install -y "$PKG_NAME" >/dev/null 2>&1 || {
+      echo_red "[ERROR] Failed to install $PKG_NAME via apt-get"
+      return 1
+    }
+  elif command -v yum &>/dev/null; then
+    yum install -y "$PKG_NAME" >/dev/null 2>&1 || {
+      echo_red "[ERROR] Failed to install $PKG_NAME via yum"
+      return 1
+    }
+  else
+    echo_red "[ERROR] No package manager found (apt-get, yum, or brew). Please install $PKG_NAME manually."
+    return 1
+  fi
+  
+  if command -v "$CMD_NAME" &>/dev/null; then
+    echo_green "$CMD_NAME installed successfully"
+    return 0
+  else
+    echo_red "[ERROR] $CMD_NAME installation verification failed"
+    return 1
+  fi
+}
+
+# Function to get the actual user (handles sudo)
+# Usage: ACTUAL_USER=$(get_actual_user)
+# Example:
+#   USER_HOME=$(eval echo "~$(get_actual_user)")
+get_actual_user() {
+  if [[ -n "${SUDO_USER:-}" ]]; then
+    echo "$SUDO_USER"
+  else
+    echo "${USER:-root}"
+  fi
+}
+
 # Function to display service URL after deployment
 # Usage: display_service_url "Service Name" port_number
 # Example:
@@ -206,7 +206,7 @@ display_service_url() {
   local SERVER_IP
   SERVER_IP=$(ip route get 1 | awk '{print $7; exit}')
 
-  echo -e "${GREEN}✓ $SERVICE_NAME deployed successfully.${RESET}"
+  echo -e "${GREEN}$SERVICE_NAME deployed successfully.${RESET}"
   echo -e "${YELLOW}Access the service at: http://$SERVER_IP:$PORT${RESET}"
 }
 
@@ -252,7 +252,7 @@ ensure_docker() {
     exit 1
   fi
   
-  echo_green "✓ Docker is installed and running."
+  echo_green "Docker is installed and running."
 }
 
 # Function to prompt for a valid network port number
@@ -286,52 +286,97 @@ print_script_header() {
   if [[ -n "${SCRIPT_NAME:-}" ]]; then
     echo -e "\n${BLUE}Running script: ${SCRIPT_NAME}${RESET}"
   fi
+
   if [[ -n "${SCRIPT_DESC:-}" ]]; then
     echo -e "${BLUE}Description: ${SCRIPT_DESC}${RESET}\n"
   fi
 }
 
-# Function to schedule a task via crontab
-# Usage: setup_cron_job "Command to run" ["default schedule"]
+# Function to check if a cron job already exists in the system crontab
+# Usage: cron_job_exists "command_to_check"
 # Example:
-#   setup_cron_job "echo hello" "0 1 * * *"
+#   if cron_job_exists "rkhunter"; then echo "Already scheduled"; fi
+# Returns: 0 if job exists, 1 if not
+# Notes:
+#   - Checks both global cron files in /etc/cron.d/ and user-level crontab
+cron_job_exists() {
+  local CRON_CMD="$1"
+  
+  if grep -r -F "$CRON_CMD" /etc/cron.d/ 2>/dev/null | grep -v '^#' | grep -q .; then
+    return 0
+  fi
+
+  if crontab -l 2>/dev/null | grep -q -F "$CRON_CMD"; then
+    return 0
+  fi
+  
+  return 1
+}
+
+# Function to schedule a task as a global system cron job (stored in /etc/cron.d/)
+# Usage: setup_cron_job "Command to run" ["default schedule"] ["job_identifier"]
+# Example:
+#   setup_cron_job "rkhunter --propupd && rkhunter --check --skip-keypress" "30 2 * * *" "rkhunter-daily"
+#   setup_cron_job "lynis audit system" "0 4 * * *" "lynis-daily"
 # Parameters:
 #   $1: The command to schedule in crontab
 #   $2: Default schedule (optional, defaults to "0 3 * * *" - 3 AM daily)
+#   $3: Job identifier/name (optional, used as filename in /etc/cron.d/)
+# Notes:
+#   - Stores jobs in /etc/cron.d/ for GLOBAL SYSTEM-WIDE access
+#   - Prevents duplicate entries by checking before adding
+#   - Requires root privileges (validated by ensure_root in setup)
+#   - Jobs run as root and are visible from any user account
+#   - Sets $CRON_SETUP_SUCCESS to true/false for caller to check
 setup_cron_job() {
   local CRON_CMD="$1"
   local DEFAULT_SCHEDULE="${2:-0 3 * * *}"
+  local JOB_IDENTIFIER="${3:-provisioning}"
   local CRON_PATTERN
+  local CRON_FILE
   local ERROR_OUTPUT
+
+  JOB_IDENTIFIER=$(echo "$JOB_IDENTIFIER" | sed 's/[^a-zA-Z0-9_-]/-/g')
+  CRON_FILE="/etc/cron.d/${JOB_IDENTIFIER}-cron"
+
+  if cron_job_exists "$CRON_CMD"; then
+    echo_yellow "This job already exists in cron. Skipping duplicate..."
+    CRON_SETUP_SUCCESS=true
+    return 0
+  fi
 
   prompt_yes_no "Do you want to schedule this job via CRON?" "Y"
   
   if [[ "$REPLY" == "Y" ]]; then
     read_from_terminal -rp "Enter CRON schedule (minute hour day month day_of_week) or leave empty for default ($DEFAULT_SCHEDULE): " CRON_PATTERN
     CRON_PATTERN="${CRON_PATTERN:-$DEFAULT_SCHEDULE}"
-    
-    local CRON_SAFE="bash -c '$CRON_CMD'"
-
     ERROR_OUTPUT=$(mktemp)
-    if (crontab -l 2>/dev/null; echo "$CRON_PATTERN $CRON_SAFE") | crontab - 2>"$ERROR_OUTPUT"; then
-      if crontab -l 2>/dev/null | grep -q -F "$CRON_CMD"; then
-        echo -e "${GREEN}✓ Job scheduled via CRON: ${CRON_PATTERN}${RESET}"
+
+    local CRON_LINE="$CRON_PATTERN root $CRON_CMD"
+    
+    if echo "$CRON_LINE" > "$CRON_FILE" 2>"$ERROR_OUTPUT"; then
+      chmod 644 "$CRON_FILE"
+      
+      if cron_job_exists "$CRON_CMD"; then
+        echo_green "Job scheduled in $CRON_FILE"
+        echo_green "  Schedule: $CRON_PATTERN"
+        echo_green "  Command: $CRON_CMD"
         CRON_SETUP_SUCCESS=true
       else
-        echo -e "${RED}[ERROR] Failed to add job to crontab.${RESET}"
+        echo_red "[ERROR] Failed to verify job was added to cron."
         CRON_SETUP_SUCCESS=false
       fi
     else
-      echo -e "${RED}[ERROR] Failed to add job to crontab.${RESET}"
+      echo_red "[ERROR] Failed to write cron job file."
       if [[ -s "$ERROR_OUTPUT" ]]; then
-        echo -e "${RED}Error details:${RESET}"
-        cat "$ERROR_OUTPUT" | sed "s/^/${RED}  /"
+        echo_red "Error details:"
+        cat "$ERROR_OUTPUT" | sed "s/^/  /"
       fi
       CRON_SETUP_SUCCESS=false
     fi
     rm -f "$ERROR_OUTPUT"
   else
-    echo -e "${YELLOW}CRON scheduling skipped.${RESET}"
+    echo_yellow "CRON scheduling skipped."
     CRON_SETUP_SUCCESS=false
   fi
 }
@@ -399,7 +444,7 @@ backup_config_file() {
   if [[ -f "$TARGET_FILE" ]]; then
     local BACKUP_FILE="${TARGET_FILE}.backup-$(date +%Y%m%d-%H%M%S)"
     cp "$TARGET_FILE" "$BACKUP_FILE"
-    echo -e "${GREEN}✓ Backup created at: $BACKUP_FILE${RESET}"
+    echo -e "${GREEN}Backup created at: $BACKUP_FILE${RESET}"
   fi
 }
 
@@ -419,13 +464,13 @@ validate_and_cleanup() {
       rm -f "$TEMP_FILE"
       exit 1
     fi
-    echo -e "${GREEN}✓ Config validated successfully.${RESET}"
+    echo -e "${GREEN}Config validated successfully.${RESET}"
   fi
 
   cp "$TEMP_FILE" "$TARGET_FILE"
   chmod "$PERMS" "$TARGET_FILE"
   rm -f "$TEMP_FILE"
-  echo -e "${GREEN}✓ Applied new config: $TARGET_FILE${RESET}"
+  echo -e "${GREEN}Applied new config: $TARGET_FILE${RESET}"
 }
 
 # Function to render a template config, apply sed substitutions, backup, and install
