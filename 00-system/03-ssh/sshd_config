@@ -4,8 +4,8 @@
 Port {{SSH_PORT}}
 Protocol 2
 
-PermitRootLogin {{DISABLE_ROOT}}
-PasswordAuthentication {{DISABLE_PASSWORD}}
+PermitRootLogin {{ROOT_LOGIN}}
+PasswordAuthentication {{PASSWORD_AUTH}}
 
 PubkeyAuthentication yes
 ChallengeResponseAuthentication no

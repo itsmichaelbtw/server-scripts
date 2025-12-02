@@ -19,16 +19,16 @@ SSH_PORT="$PORT_REPLY"
 
 prompt_yes_no "Disable SSH password authentication?" "Y"
 if [[ "$REPLY" == "Y" ]]; then
-  DISABLE_PASSWORD="yes"
+  PASSWORD_AUTH="no"
 else
-  DISABLE_PASSWORD="no"
+  PASSWORD_AUTH="yes"
 fi
 
 prompt_yes_no "Disable SSH root login?" "Y"
 if [[ "$REPLY" == "Y" ]]; then
-  DISABLE_ROOT="yes"
+  ROOT_LOGIN="no"
 else
-  DISABLE_ROOT="no"
+  ROOT_LOGIN="yes"
 fi
 
 TEMPLATE_FILE="$SCRIPT_DIR/sshd_config"
@@ -41,8 +41,8 @@ validate_ssh_config() {
 
 render_template_config "$TEMPLATE_FILE" "$TARGET_FILE" 600 \
   -e "s|{{SSH_PORT}}|$SSH_PORT|g" \
-  -e "s|{{DISABLE_PASSWORD}}|$DISABLE_PASSWORD|g" \
-  -e "s|{{DISABLE_ROOT}}|$DISABLE_ROOT|g" \
+  -e "s|{{PASSWORD_AUTH}}|$PASSWORD_AUTH|g" \
+  -e "s|{{ROOT_LOGIN}}|$ROOT_LOGIN|g" \
   --validate "validate_ssh_config"
 
 echo_yellow "Restarting SSH service..."
