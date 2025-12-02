@@ -1,0 +1,14 @@
+[Unit]
+Description=Traefik Dashboard Port-Forward
+After=k3s.service
+Requires=k3s.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/kubectl --namespace {{TRAEFIK_NS}} port-forward service/traefik {{DASH_PORT}}:80
+Restart=always
+RestartSec=5
+Environment=KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+
+[Install]
+WantedBy=multi-user.target
