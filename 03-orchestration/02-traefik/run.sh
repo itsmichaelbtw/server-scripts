@@ -66,14 +66,14 @@ helm upgrade --install traefik traefik/traefik \
   --namespace "$TRAEFIK_NS" \
   -f "$VALUES_FILE"
 
-echo_green "✓ Traefik installed/upgraded successfully in namespace $TRAEFIK_NS with ACME/Cloudflare DNS."
+echo_green "Traefik installed/upgraded successfully in namespace $TRAEFIK_NS with ACME/Cloudflare DNS."
 
 if [[ "${ENABLE_DASH^^}" == "Y" ]]; then
   read_from_terminal -rp "Enter local port to expose the Traefik dashboard [8080]: " DASH_PORT
   DASH_PORT=${DASH_PORT:-8080}
 
   echo_yellow "Creating systemd service for Traefik dashboard port-forward..."
-  SERVICE_TEMPLATE="$SCRIPT_DIR/traefik.service.tmpl"
+  SERVICE_TEMPLATE="$SCRIPT_DIR/traefik.service"
   SERVICE_FILE="/etc/systemd/system/traefik-dashboard-portforward.service"
 
   render_template_config "$SERVICE_TEMPLATE" "$SERVICE_FILE" 644 \
@@ -84,7 +84,7 @@ if [[ "${ENABLE_DASH^^}" == "Y" ]]; then
   sudo systemctl enable --now traefik-dashboard-portforward
 
   display_service_url "Traefik Dashboard" "$DASH_PORT"
-  echo_green "✓ Systemd service created and started."
+  echo_green "Systemd service created and started."
 fi
 
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"
