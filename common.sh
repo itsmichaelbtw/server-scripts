@@ -10,6 +10,82 @@ BLUE="\033[1;34m"
 RED="\033[1;31m"
 RESET="\033[0m"
 
+# Function to print a newline
+# Usage: echo_newline
+# Example:
+#   echo_newline
+echo_newline() {
+  echo ""
+}
+
+# Function to check if a command exists
+# Usage: does_cmd_exist "command_name"
+# Example:
+#   if does_cmd_exist "docker"; then echo "Docker is installed"; fi
+does_cmd_exist() {
+  local CMD_NAME="$1"
+  if command -v "$CMD_NAME" &>/dev/null; then
+    echo_green "✓ $CMD_NAME is installed"
+    return 0
+  else
+    echo_yellow "⚠ $CMD_NAME is not installed"
+    return 1
+  fi
+}
+
+# Function to require a command and attempt to install if not exists
+# Usage: require_cmd "command_name" [package_name]
+# Example:
+#   require_cmd "docker" "docker.io"
+#   require_cmd "git"
+require_cmd() {
+  local CMD_NAME="$1"
+  local PKG_NAME="${2:-$CMD_NAME}"
+  
+  if command -v "$CMD_NAME" &>/dev/null; then
+    echo_green "✓ $CMD_NAME is already installed"
+    return 0
+  fi
+  
+  echo_yellow "⚠ $CMD_NAME is not installed. Attempting to install $PKG_NAME..."
+  
+  if command -v apt-get &>/dev/null; then
+    apt-get update -qq
+    apt-get install -y "$PKG_NAME" >/dev/null 2>&1 || {
+      echo_red "[ERROR] Failed to install $PKG_NAME via apt-get"
+      return 1
+    }
+  elif command -v yum &>/dev/null; then
+    yum install -y "$PKG_NAME" >/dev/null 2>&1 || {
+      echo_red "[ERROR] Failed to install $PKG_NAME via yum"
+      return 1
+    }
+  else
+    echo_red "[ERROR] No package manager found (apt-get, yum, or brew). Please install $PKG_NAME manually."
+    return 1
+  fi
+  
+  if command -v "$CMD_NAME" &>/dev/null; then
+    echo_green "✓ $CMD_NAME installed successfully"
+    return 0
+  else
+    echo_red "[ERROR] $CMD_NAME installation verification failed"
+    return 1
+  fi
+}
+
+# Function to get the actual user (handles sudo)
+# Usage: ACTUAL_USER=$(get_actual_user)
+# Example:
+#   USER_HOME=$(eval echo "~$(get_actual_user)")
+get_actual_user() {
+  if [[ -n "${SUDO_USER:-}" ]]; then
+    echo "$SUDO_USER"
+  else
+    echo "${USER:-root}"
+  fi
+}
+
 # Function to print text in green
 # Usage: echo_green "Success message"
 # Example:
@@ -109,12 +185,12 @@ validate_environment() {
 #   load_env
 # Loads .env file from the script's directory if it exists
 load_env() {
-  local script_dir="${1:-.}"
-  local env_file="$script_dir/.env"
+  local SCRIPT_DIR="${1:-.}"
+  local ENV_FILE="$SCRIPT_DIR/.env"
   
-  if [[ -f "$env_file" ]]; then
+  if [[ -f "$ENV_FILE" ]]; then
     echo_blue "Loading configuration from .env file..."
-    source "$env_file"
+    source "$ENV_FILE"
   fi
 }
 
@@ -124,14 +200,14 @@ load_env() {
 #   display_service_url "MyApp" 8080
 # Determines server IP and displays formatted access URL
 display_service_url() {
-  local service_name="$1"
-  local port="$2"
+  local SERVICE_NAME="$1"
+  local PORT="$2"
   
-  local server_ip
-  server_ip=$(ip route get 1 | awk '{print $7; exit}')
+  local SERVER_IP
+  SERVER_IP=$(ip route get 1 | awk '{print $7; exit}')
 
-  echo -e "${GREEN}✓ $service_name deployed successfully.${RESET}"
-  echo -e "${YELLOW}Access the service at: http://$server_ip:$port${RESET}"
+  echo -e "${GREEN}✓ $SERVICE_NAME deployed successfully.${RESET}"
+  echo -e "${YELLOW}Access the service at: http://$SERVER_IP:$PORT${RESET}"
 }
 
 # Function to prompt user for yes/no input
@@ -140,19 +216,19 @@ display_service_url() {
 #   prompt_yes_no "Continue?" "N"; echo $REPLY
 # Returns: Uppercase Y or N in the variable $REPLY
 prompt_yes_no() {
-  local prompt="$1"
-  local default="${2:-Y}"
-  local valid_default="${default^^}"
+  local PROMPT="$1"
+  local DEFAULT="${2:-Y}"
+  local VALID_DEFAULT="${DEFAULT^^}"
   
-  if [[ "$valid_default" != "Y" && "$valid_default" != "N" ]]; then
-    valid_default="Y"
+  if [[ "$VALID_DEFAULT" != "Y" && "$VALID_DEFAULT" != "N" ]]; then
+    VALID_DEFAULT="Y"
   fi
   
-  local prompt_text="$prompt [$([[ $valid_default == Y ]] && echo "Y/n" || echo "y/N")]: "
+  local PROMPT_TEXT="$PROMPT [$([[ $VALID_DEFAULT == Y ]] && echo "Y/n" || echo "y/N")]: "
   
   while true; do
-    read_from_terminal -rp "$prompt_text" REPLY
-    REPLY=${REPLY:-$valid_default}
+    read_from_terminal -rp "$PROMPT_TEXT" REPLY
+    REPLY=${REPLY:-$VALID_DEFAULT}
     case "${REPLY^^}" in
       Y|N) REPLY="${REPLY^^}"; break ;;
       *) echo -e "${YELLOW}Please enter Y or N.${RESET}" ;;
@@ -166,7 +242,7 @@ prompt_yes_no() {
 #   ensure_docker
 # Exits with error message if Docker is not installed
 ensure_docker() {
-  if ! command -v docker &>/dev/null; then
+  if ! does_cmd_exist "docker" 2>/dev/null; then
     echo -e "${RED}[ERROR] Docker is not installed. Please run 04-orchestration/00-docker first.${RESET}"
     exit 1
   fi
@@ -176,7 +252,7 @@ ensure_docker() {
     exit 1
   fi
   
-  echo -e "${GREEN}✓ Docker is installed and running.${RESET}"
+  echo_green "✓ Docker is installed and running."
 }
 
 # Function to prompt for a valid network port number
@@ -185,16 +261,16 @@ ensure_docker() {
 #   prompt_for_port "Enter port" 8080; echo $PORT_REPLY
 # Returns: The valid port number in the variable $PORT_REPLY
 prompt_for_port() {
-  local prompt="$1"
-  local default="${2:-8080}"
-  local port_value
+  local PROMPT="$1"
+  local DEFAULT="${2:-8080}"
+  local PORT_VALUE
   
   while true; do
-    read_from_terminal -rp "$prompt (default: $default): " port_value
-    port_value="${port_value:-$default}"
+    read_from_terminal -rp "$PROMPT (default: $DEFAULT): " PORT_VALUE
+    PORT_VALUE="${PORT_VALUE:-$DEFAULT}"
     
-    if [[ "$port_value" =~ ^[0-9]+$ ]] && (( port_value >= 1 && port_value <= 65535 )); then
-      PORT_REPLY="$port_value"
+    if [[ "$PORT_VALUE" =~ ^[0-9]+$ ]] && (( PORT_VALUE >= 1 && PORT_VALUE <= 65535 )); then
+      PORT_REPLY="$PORT_VALUE"
       break
     else
       echo -e "${YELLOW}Invalid port. Please enter a number between 1-65535.${RESET}"
@@ -223,23 +299,23 @@ print_script_header() {
 #   $1: The command to schedule in crontab
 #   $2: Default schedule (optional, defaults to "0 3 * * *" - 3 AM daily)
 setup_cron_job() {
-  local cron_cmd="$1"
-  local default_schedule="${2:-0 3 * * *}"
-  local cron_pattern
-  local error_output
+  local CRON_CMD="$1"
+  local DEFAULT_SCHEDULE="${2:-0 3 * * *}"
+  local CRON_PATTERN
+  local ERROR_OUTPUT
 
   prompt_yes_no "Do you want to schedule this job via CRON?" "Y"
   
   if [[ "$REPLY" == "Y" ]]; then
-    read_from_terminal -rp "Enter CRON schedule (minute hour day month day_of_week) or leave empty for default ($default_schedule): " cron_pattern
-    cron_pattern="${cron_pattern:-$default_schedule}"
+    read_from_terminal -rp "Enter CRON schedule (minute hour day month day_of_week) or leave empty for default ($DEFAULT_SCHEDULE): " CRON_PATTERN
+    CRON_PATTERN="${CRON_PATTERN:-$DEFAULT_SCHEDULE}"
     
-    local cron_safe="bash -c '$cron_cmd'"
+    local CRON_SAFE="bash -c '$CRON_CMD'"
 
-    error_output=$(mktemp)
-    if (crontab -l 2>/dev/null; echo "$cron_pattern $cron_safe") | crontab - 2>"$error_output"; then
-      if crontab -l 2>/dev/null | grep -q -F "$cron_cmd"; then
-        echo -e "${GREEN}✓ Job scheduled via CRON: ${cron_pattern}${RESET}"
+    ERROR_OUTPUT=$(mktemp)
+    if (crontab -l 2>/dev/null; echo "$CRON_PATTERN $CRON_SAFE") | crontab - 2>"$ERROR_OUTPUT"; then
+      if crontab -l 2>/dev/null | grep -q -F "$CRON_CMD"; then
+        echo -e "${GREEN}✓ Job scheduled via CRON: ${CRON_PATTERN}${RESET}"
         CRON_SETUP_SUCCESS=true
       else
         echo -e "${RED}[ERROR] Failed to add job to crontab.${RESET}"
@@ -247,13 +323,13 @@ setup_cron_job() {
       fi
     else
       echo -e "${RED}[ERROR] Failed to add job to crontab.${RESET}"
-      if [[ -s "$error_output" ]]; then
+      if [[ -s "$ERROR_OUTPUT" ]]; then
         echo -e "${RED}Error details:${RESET}"
-        cat "$error_output" | sed "s/^/${RED}  /"
+        cat "$ERROR_OUTPUT" | sed "s/^/${RED}  /"
       fi
       CRON_SETUP_SUCCESS=false
     fi
-    rm -f "$error_output"
+    rm -f "$ERROR_OUTPUT"
   else
     echo -e "${YELLOW}CRON scheduling skipped.${RESET}"
     CRON_SETUP_SUCCESS=false
@@ -267,43 +343,43 @@ setup_cron_job() {
 # Parameters:
 #   $1: Base directory to search for run.sh scripts
 execute_run_sh() {
-  local base_dir script_path run_files rel_path
+  local BASE_DIR SCRIPT_PATH RUN_FILES REL_PATH
 
-  script_path="$(cd "$(dirname "${BASH_SOURCE[1]}")" && pwd)/$(basename "${BASH_SOURCE[1]}")"
-  base_dir="$(dirname "$script_path")"
+  SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[1]}")" && pwd)/$(basename "${BASH_SOURCE[1]}")"
+  BASE_DIR="$(dirname "$SCRIPT_PATH")"
 
-  local rel_base_dir rel_script_path
-  rel_base_dir="$base_dir"
-  rel_script_path="$script_path"
-  [[ "$base_dir" == "$PWD"* ]] && rel_base_dir=".${base_dir#$PWD}"
-  [[ "$script_path" == "$PWD"* ]] && rel_script_path=".${script_path#$PWD}"
+  local REL_BASE_DIR REL_SCRIPT_PATH
+  REL_BASE_DIR="$BASE_DIR"
+  REL_SCRIPT_PATH="$SCRIPT_PATH"
+  [[ "$BASE_DIR" == "$PWD"* ]] && REL_BASE_DIR=".${BASE_DIR#$PWD}"
+  [[ "$SCRIPT_PATH" == "$PWD"* ]] && REL_SCRIPT_PATH=".${SCRIPT_PATH#$PWD}"
 
-  echo -e "${YELLOW}Searching for 'run.sh' files in $rel_base_dir (excluding $rel_script_path)...${RESET}\n"
+  echo -e "${YELLOW}Searching for 'run.sh' files in $REL_BASE_DIR (excluding $REL_SCRIPT_PATH)...${RESET}\n"
 
-  run_files=$(find "$base_dir" -type f -name "run.sh" ! -path "$script_path" | sort)
-  if [[ -z "$run_files" ]]; then
+  RUN_FILES=$(find "$BASE_DIR" -type f -name "run.sh" ! -path "$SCRIPT_PATH" | sort)
+  if [[ -z "$RUN_FILES" ]]; then
     echo -e "${RED}No run.sh files found.${RESET}"
     return
   fi
 
   echo -e "${BLUE}Found the following run.sh files:${RESET}\n"
   while IFS= read -r file; do
-    rel_path="${file#$base_dir/}"
-    echo -e "${YELLOW}- $rel_path${RESET}"
-  done <<< "$run_files"
-  echo ""
+    REL_PATH="${file#$BASE_DIR/}"
+    echo -e "${YELLOW}- $REL_PATH${RESET}"
+  done <<< "$RUN_FILES"
+  echo_newline
 
   while IFS= read -r file; do
-    rel_path="${file#$base_dir/}"
-    prompt_yes_no "Do you want to execute '$rel_path'?" "Y"
+    REL_PATH="${file#$BASE_DIR/}"
+    prompt_yes_no "Do you want to execute '$REL_PATH'?" "Y"
     if [[ "$REPLY" == "Y" ]]; then
-      echo -e "${YELLOW}Executing $rel_path ...${RESET}"
+      echo -e "${YELLOW}Executing $REL_PATH ...${RESET}"
 
       set +e
       bash "$file"
-      local exit_code=$?
+      local EXIT_CODE=$?
       set -e
-      if [[ $exit_code -ne 0 ]]; then
+      if [[ $EXIT_CODE -ne 0 ]]; then
         echo -e "${RED}Warning: $rel_path exited with status $exit_code, continuing...${RESET}"
       fi
     else
@@ -319,11 +395,11 @@ execute_run_sh() {
 # Example:
 #   backup_config_file "/etc/ssh/sshd_config"
 backup_config_file() {
-  local target_file="$1"
-  if [[ -f "$target_file" ]]; then
-    local backup_file="${target_file}.backup-$(date +%Y%m%d-%H%M%S)"
-    cp "$target_file" "$backup_file"
-    echo -e "${GREEN}✓ Backup created at: $backup_file${RESET}"
+  local TARGET_FILE="$1"
+  if [[ -f "$TARGET_FILE" ]]; then
+    local BACKUP_FILE="${TARGET_FILE}.backup-$(date +%Y%m%d-%H%M%S)"
+    cp "$TARGET_FILE" "$BACKUP_FILE"
+    echo -e "${GREEN}✓ Backup created at: $BACKUP_FILE${RESET}"
   fi
 }
 
@@ -332,24 +408,24 @@ backup_config_file() {
 # Example:
 #   validate_and_cleanup "$temp_output" "/etc/ssh/sshd_config" 600 "sshd -t -f"
 validate_and_cleanup() {
-  local temp_file="$1"
-  local target_file="$2"
-  local perms="$3"
-  local validate_cmd="$4"
+  local TEMP_FILE="$1"
+  local TARGET_FILE="$2"
+  local PERMS="$3"
+  local VALIDATE_CMD="$4"
 
-  if [[ -n "$validate_cmd" ]]; then
-    if ! $validate_cmd "$temp_file"; then
-      echo -e "${RED}[ERROR] Validation failed for $temp_file. Not applying config.${RESET}"
-      rm -f "$temp_file"
+  if [[ -n "$VALIDATE_CMD" ]]; then
+    if ! $VALIDATE_CMD "$TEMP_FILE"; then
+      echo -e "${RED}[ERROR] Validation failed for $TEMP_FILE. Not applying config.${RESET}"
+      rm -f "$TEMP_FILE"
       exit 1
     fi
     echo -e "${GREEN}✓ Config validated successfully.${RESET}"
   fi
 
-  cp "$temp_file" "$target_file"
-  chmod "$perms" "$target_file"
-  rm -f "$temp_file"
-  echo -e "${GREEN}✓ Applied new config: $target_file${RESET}"
+  cp "$TEMP_FILE" "$TARGET_FILE"
+  chmod "$PERMS" "$TARGET_FILE"
+  rm -f "$TEMP_FILE"
+  echo -e "${GREEN}✓ Applied new config: $TARGET_FILE${RESET}"
 }
 
 # Function to render a template config, apply sed substitutions, backup, and install
@@ -358,39 +434,39 @@ validate_and_cleanup() {
 #   render_template_config "$SCRIPT_DIR/sshd_config" "/etc/ssh/sshd_config" 600 \
 #     -e "s|{{SSH_PORT}}|$SSH_PORT|g" -e "s|{{DISABLE_PASSWORD}}|$DISABLE_PASSWORD|g" --validate "sshd -t -f"
 render_template_config() {
-  local template_file="$1"
-  local target_file="$2"
-  local perms="$3"
+  local TEMPLATE_FILE="$1"
+  local TARGET_FILE="$2"
+  local PERMS="$3"
   shift 3
 
-  local validate_cmd=""
-  local sed_args=()
+  local VALIDATE_CMD=""
+  local SED_ARGS=()
 
   while [[ $# -gt 0 ]]; do
     if [[ "$1" == "--validate" ]]; then
-      validate_cmd="$2"
+      VALIDATE_CMD="$2"
       shift 2
     else
-      sed_args+=("$1")
+      SED_ARGS+=("$1")
       shift
     fi
   done
 
-  if [[ ! -f "$template_file" ]]; then
-    echo -e "${RED}[ERROR] Template file not found: $template_file${RESET}"
+  if [[ ! -f "$TEMPLATE_FILE" ]]; then
+    echo -e "${RED}[ERROR] Template file not found: $TEMPLATE_FILE${RESET}"
     exit 1
   fi
 
-  backup_config_file "$target_file"
+  backup_config_file "$TARGET_FILE"
 
-  local temp_output
-  temp_output=$(mktemp)
+  local TEMP_OUTPUT
+  TEMP_OUTPUT=$(mktemp)
 
-  if [[ ${#sed_args[@]} -gt 0 ]]; then
-    sed "${sed_args[@]}" "$template_file" > "$temp_output"
+  if [[ ${#SED_ARGS[@]} -gt 0 ]]; then
+    sed "${SED_ARGS[@]}" "$TEMPLATE_FILE" > "$TEMP_OUTPUT"
   else
-    cp "$template_file" "$temp_output"
+    cp "$TEMPLATE_FILE" "$TEMP_OUTPUT"
   fi
 
-  validate_and_cleanup "$temp_output" "$target_file" "$perms" "$validate_cmd"
+  validate_and_cleanup "$TEMP_OUTPUT" "$TARGET_FILE" "$PERMS" "$VALIDATE_CMD"
 }

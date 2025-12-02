@@ -34,7 +34,7 @@ fi
 read_from_terminal -rp "Enter any additional ports to allow (comma-separated, or leave blank): " EXTRA_PORTS_RAW
 IFS=',' read -ra EXTRA_PORTS <<< "${EXTRA_PORTS_RAW}"
 
-echo ""
+echo_newline
 echo_yellow "Installing UFW if not installed..."
 apt install -y ufw
 
@@ -77,6 +77,6 @@ ufw limit "${SSH_PORT}/tcp"
 echo_yellow "Enabling firewall..."
 ufw --force enable
 
-echo ""
+echo_newline
 echo_green "✓ Firewall configuration complete."
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

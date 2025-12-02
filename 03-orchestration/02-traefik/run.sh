@@ -15,7 +15,7 @@ SCRIPT_DESC="Install Traefik ingress controller on k3s using Helm with ACME/Clou
 print_script_header
 validate_environment
 
-if ! command -v k3s &>/dev/null; then
+if ! does_cmd_exist "k3s" 2>/dev/null; then
   echo_red "[ERROR] k3s not installed. Please run 01-k3s first."
   exit 1
 fi
@@ -41,11 +41,11 @@ TRAEFIK_NS=${TRAEFIK_NS:-traefik}
 
 read_from_terminal -rp "Enter your email for ACME certificate registration: " ACME_EMAIL
 read_from_terminal -rsp "Enter Cloudflare API Token with DNS edit permissions: " CF_API_TOKEN
-echo ""
+echo_newline
 
 export CF_API_TOKEN
 
-if ! command -v helm &>/dev/null; then
+if ! does_cmd_exist "helm" 2>/dev/null; then
   echo_yellow "Installing Helm..."
   curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 fi

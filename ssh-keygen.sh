@@ -50,7 +50,8 @@ CONFIG_ALIAS="${CONFIG_ALIAS:-$SERVER_HOST}"
 read_from_terminal -rp "Enter SSH key comment (default: username@hostname): " KEY_COMMENT
 KEY_COMMENT="${KEY_COMMENT:-$REMOTE_USER@$SERVER_HOST}"
 
-SSH_DIR="$HOME/.ssh"
+ACTUAL_USER=$(get_actual_user)
+SSH_DIR=$(eval echo "~${ACTUAL_USER}/.ssh")
 if [[ ! -d "$SSH_DIR" ]]; then
   echo_yellow "Creating SSH directory: $SSH_DIR"
   mkdir -p "$SSH_DIR"
@@ -96,24 +97,24 @@ if [[ -n "${SUDO_USER:-}" ]]; then
 fi
 
 add_public_key_to_remote() {
-  local target_user="$1"
-  local auth_user="$2"
-  local pubkey_content="$3"
+  local TARGET_USER="$1"
+  local AUTH_USER="$2"
+  local PUBKEY_CONTENT="$3"
   
-  local ssh_cmd
-  local ssh_opts="-o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$HOME/.ssh/known_hosts"
+  local SSH_CMD
+  local SSH_OPTS="-o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$(eval echo \"~${ACTUAL_USER}/.ssh/known_hosts\")"
   
-  if [[ "$auth_user" == "$target_user" ]]; then
-    ssh_cmd="mkdir -p ~/.ssh && echo '$pubkey_content' | tee -a ~/.ssh/authorized_keys > /dev/null && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"
+  if [[ "$AUTH_USER" == "$TARGET_USER" ]]; then
+    SSH_CMD="mkdir -p ~/.ssh && echo '$PUBKEY_CONTENT' | tee -a ~/.ssh/authorized_keys > /dev/null && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"
   else
-    ssh_cmd="sudo -u $target_user sh -c 'mkdir -p ~/.ssh && echo '\"'\"'$pubkey_content'\"'\"' | tee -a ~/.ssh/authorized_keys > /dev/null && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys'"
+    SSH_CMD="sudo -u $TARGET_USER sh -c 'mkdir -p ~/.ssh && echo '\"'\"'$PUBKEY_CONTENT'\"'\"' | tee -a ~/.ssh/authorized_keys > /dev/null && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys'"
   fi
   
-  if ssh $ssh_opts -p "$REMOTE_PORT" "$auth_user@$SERVER_HOST" "$ssh_cmd" 2>&1; then
+  if ssh $SSH_OPTS -p "$REMOTE_PORT" "$AUTH_USER@$SERVER_HOST" "$SSH_CMD" 2>&1; then
     return 0
   fi
   
-  if ssh $ssh_opts -o PubkeyAuthentication=no -p "$REMOTE_PORT" "$auth_user@$SERVER_HOST" "$ssh_cmd" 2>&1; then
+  if ssh $SSH_OPTS -o PubkeyAuthentication=no -p "$REMOTE_PORT" "$AUTH_USER@$SERVER_HOST" "$SSH_CMD" 2>&1; then
     return 0
   fi
   
@@ -126,7 +127,7 @@ echo_yellow "Clearing old host key entry (if it exists)..."
 ssh-keygen -R "$SERVER_HOST" 2>/dev/null || true
 
 echo_yellow "Accepting new host key..."
-ssh-keyscan -p "$REMOTE_PORT" "$SERVER_HOST" >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
+ssh-keyscan -p "$REMOTE_PORT" "$SERVER_HOST" >> "$SSH_DIR/known_hosts" 2>/dev/null || true
 
 echo_yellow "\nCopying public key to server..."
 echo_yellow "Attempting connection (will try public key first, then password).\n"
@@ -182,7 +183,7 @@ if grep -q "^Host $CONFIG_ALIAS$" "$SSH_CONFIG"; then
 fi
 
 {
-  echo ""
+  echo_newline
   echo "Host $CONFIG_ALIAS"
   echo "    HostName $SERVER_HOST"
   echo "    User $REMOTE_USER"

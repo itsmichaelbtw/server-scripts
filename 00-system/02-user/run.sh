@@ -36,7 +36,7 @@ else
   ENABLE_SUDO="false"
 fi
 
-echo ""
+echo_newline
 echo_yellow "Step 1: Creating user '${USER_NAME}' if not exists..."
 
 if id "$USER_NAME" &>/dev/null; then
@@ -65,7 +65,7 @@ else
   echo_yellow "Skipping sudo setup for '${USER_NAME}'."
 fi
 
-echo ""
+echo_newline
 echo_green "✓ User and group configuration complete."
 echo_green "Run 'ssh_keygen.sh' to generate and configure SSH keys for this user"
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

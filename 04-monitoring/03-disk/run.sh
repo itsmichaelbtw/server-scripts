@@ -47,10 +47,10 @@ for DISK in "${DISKS[@]}"; do
 done
 
 echo_yellow "Ensuring smartd service is enabled and running..."
-if command -v systemctl &> /dev/null; then
+if does_cmd_exist "systemctl" 2>/dev/null; then
   systemctl enable smartd || true
   systemctl start smartd || true
-elif command -v service &> /dev/null; then
+elif does_cmd_exist "service" 2>/dev/null; then
   service smartd enable || true
   service smartd start || true
 else

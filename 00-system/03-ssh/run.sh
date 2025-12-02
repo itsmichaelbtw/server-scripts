@@ -53,6 +53,6 @@ else
   exit 1
 fi
 
-echo ""
+echo_newline
 echo_green "✓ SSH configuration complete."
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

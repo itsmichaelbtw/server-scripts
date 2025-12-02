@@ -50,7 +50,7 @@ while true; do
   fi
 done
 
-echo ""
+echo_newline
 echo_yellow "Installing Fail2Ban..."
 apt install -y fail2ban
 
