@@ -13,31 +13,28 @@ SCRIPT_DESC="Dynamically copy all server scripts to a remote server with verbose
 
 print_script_header
 
-if [[ -f "$SCRIPT_DIR/.env" ]]; then
-  echo_blue "Loading configuration from .env file..."
-  source "$SCRIPT_DIR/.env"
-fi
+load_env "$SCRIPT_DIR"
 
-read_from_terminal -rp "Enter remote server IP address${COPY_SERVER_IP:+ [${COPY_SERVER_IP}]}: " SERVER_IP
-SERVER_IP="${SERVER_IP:-${COPY_SERVER_IP}}"
+read_from_terminal -rp "Enter remote server IP address${SERVER_IP:+ [${SERVER_IP}]}: " INPUT_SERVER_IP
+SERVER_IP="${INPUT_SERVER_IP:-${SERVER_IP}}"
 if [[ -z "$SERVER_IP" ]]; then
   echo_red "[ERROR] IP address cannot be empty."
   exit 1
 fi
 
-read_from_terminal -rp "Enter username for SSH connection (default: ${COPY_SSH_USER:-root}): " SSH_USER
-SSH_USER="${SSH_USER:-${COPY_SSH_USER:-root}}"
+read_from_terminal -rp "Enter username for SSH connection (default: ${SSH_USER:-root}): " INPUT_SSH_USER
+SSH_USER="${INPUT_SSH_USER:-${SSH_USER:-root}}"
 
-prompt_for_port "Enter SSH port" "${COPY_SSH_PORT:-22}"
+prompt_for_port "Enter SSH port" "${SSH_PORT:-22}"
 SSH_PORT="$PORT_REPLY"
 
-# Remove quotes from COPY_REMOTE_DIR if present (from .env file with single quotes)
-COPY_REMOTE_DIR_CLEAN="${COPY_REMOTE_DIR//\'/}"
+# Remove quotes from REMOTE_DIR if present (from .env file with single quotes)
+REMOTE_DIR_CLEAN="${REMOTE_DIR//\'/}"
 
-DEFAULT_REMOTE_DIR="${COPY_REMOTE_DIR_CLEAN:-~/server-scripts}"
-read_from_terminal -rp "Enter remote directory path (default: $DEFAULT_REMOTE_DIR): " CUSTOM_REMOTE_DIR
+DEFAULT_REMOTE_DIR="${REMOTE_DIR_CLEAN:-~/server-scripts}"
+read_from_terminal -rp "Enter remote directory path (default: $DEFAULT_REMOTE_DIR): " INPUT_REMOTE_DIR
 
-REMOTE_DIR="${CUSTOM_REMOTE_DIR:-$DEFAULT_REMOTE_DIR}"
+REMOTE_DIR="${INPUT_REMOTE_DIR:-$DEFAULT_REMOTE_DIR}"
 REMOTE_DIR="${REMOTE_DIR%/}"
 SOURCE_DIR="$SCRIPT_DIR"
 
@@ -52,6 +49,7 @@ echo_blue "Files and directories to be copied:"
 find "$SOURCE_DIR" -maxdepth 1 -mindepth 1 \
   ! -name ".*" \
   ! -name "*.log" \
+  ! -name "LICENSE" \
   | while read -r item; do
     echo "  - $(basename "$item")"
 done
@@ -71,8 +69,11 @@ echo_yellow "Copying files to remote server..."
 rm -f transfer.tar.gz
 tar -czvf transfer.tar.gz \
   --exclude='.git' \
+  --exclude='.env' \
+  --exclude='.env.example' \
   --exclude='.github' \
   --exclude='.gitignore' \
+  --exclude='LICENSE' \
   --exclude='transfer.tar.gz' \
   .
 
