@@ -1,15 +1,18 @@
-# !/usr/bin/env bash
+#!/usr/bin/env bash
+
 set -euo pipefail
 
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 ROOT_DIR=$(realpath "$SCRIPT_DIR/../..")
 source "$ROOT_DIR/common.sh"
 
-SCRIPT_NAME="00-netdata"
-SCRIPT_DESC="Deploy NetData real-time monitoring via Docker."
+SCRIPT_NAME="05-grafana"
+SCRIPT_DESC="Deploy Grafana dashboards and visualization platform."
 
-CONTAINER_NAME=netdata
-CONTAINER_PORT=19999
+CONTAINER_NAME=grafana
+CONTAINER_PORT=3500
+GRAFANA_DATA_DIR="${1:-/var/lib/grafana}"
+GRAFANA_VERSION="latest"
 
 print_script_header
 validate_environment
@@ -20,27 +23,27 @@ remove_docker_container "$CONTAINER_NAME"
 echo_deploying_container "$CONTAINER_NAME" "$CONTAINER_PORT"
 configure_ufw_for_wireguard "$CONTAINER_PORT" tcp
 
+ensure_directory "$GRAFANA_DATA_DIR" 755
+
+docker volume create grafana-storage
 docker run -d \
   --name="$CONTAINER_NAME" \
   --network="$DOCKER_NETWORK_NAME" \
   --restart=unless-stopped \
-  -p "$CONTAINER_PORT:19999" \
-  -v netdataconfig:/etc/netdata \
-  -v netdatalib:/var/lib/netdata \
-  -v netdatacache:/var/cache/netdata \
-  -v /etc/passwd:/host/etc/passwd:ro \
-  -v /etc/group:/host/etc/group:ro \
-  -v /proc:/host/proc:ro \
-  -v /sys:/host/sys:ro \
-  -v /etc/os-release:/host/etc/os-release:ro \
-  --cap-add=SYS_PTRACE \
-  --security-opt apparmor=unconfined \
-  netdata/netdata
+  -p "$CONTAINER_PORT:3000" \
+  -v grafana-storage:/var/lib/grafana \
+  -e GF_SECURITY_ADMIN_USER=admin \
+  -e GF_SECURITY_ADMIN_PASSWORD=admin \
+  -e GF_PLUGINS_PREINSTALL=grafana-clock-panel,grafana-worldmap-panel \
+  -e GF_SERVER_ROOT_URL="http://localhost:$CONTAINER_PORT/" \
+  grafana/grafana-enterprise:$GRAFANA_VERSION
 
 sleep 3
 
 if verify_container_is_running "$CONTAINER_NAME"; then
   echo_green "$CONTAINER_NAME container is running"
+  echo_blue "Default credentials: admin / admin"
+  echo_blue "Persistent storage at: $GRAFANA_DATA_DIR"
   echo_blue "Access at: http://localhost:$CONTAINER_PORT"
   exit 0
 else
@@ -48,4 +51,3 @@ else
   echo_yellow "Check logs with: docker logs $CONTAINER_NAME"
   exit 1
 fi
-

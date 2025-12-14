@@ -1,15 +1,16 @@
-# !/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 ROOT_DIR=$(realpath "$SCRIPT_DIR/../..")
 source "$ROOT_DIR/common.sh"
 
-SCRIPT_NAME="00-netdata"
-SCRIPT_DESC="Deploy NetData real-time monitoring via Docker."
+SCRIPT_NAME="02-crontab-ui"
+SCRIPT_DESC="Deploy Crontab-UI for GUI management of cron jobs via Docker."
 
-CONTAINER_NAME=netdata
-CONTAINER_PORT=19999
+CONTAINER_NAME=crontab-ui
+CONTAINER_PORT=7070
+CRON_SYSTEM_DIR="/var/spool/cron/crontabs"
 
 print_script_header
 validate_environment
@@ -20,22 +21,19 @@ remove_docker_container "$CONTAINER_NAME"
 echo_deploying_container "$CONTAINER_NAME" "$CONTAINER_PORT"
 configure_ufw_for_wireguard "$CONTAINER_PORT" tcp
 
+ensure_directory "$CRON_SYSTEM_DIR" 700
+
+echo_blue "Crontab-UI will manage system crontabs from: $CRON_SYSTEM_DIR"
+echo_blue "Jobs added via GUI will be executed by the system cron daemon"
+echo_newline
+
 docker run -d \
   --name="$CONTAINER_NAME" \
   --network="$DOCKER_NETWORK_NAME" \
   --restart=unless-stopped \
-  -p "$CONTAINER_PORT:19999" \
-  -v netdataconfig:/etc/netdata \
-  -v netdatalib:/var/lib/netdata \
-  -v netdatacache:/var/cache/netdata \
-  -v /etc/passwd:/host/etc/passwd:ro \
-  -v /etc/group:/host/etc/group:ro \
-  -v /proc:/host/proc:ro \
-  -v /sys:/host/sys:ro \
-  -v /etc/os-release:/host/etc/os-release:ro \
-  --cap-add=SYS_PTRACE \
-  --security-opt apparmor=unconfined \
-  netdata/netdata
+  -p "$CONTAINER_PORT:8000" \
+  -v "$CRON_SYSTEM_DIR:/crontab-ui/crontabs" \
+  alseambusher/crontab-ui
 
 sleep 3
 
@@ -48,4 +46,3 @@ else
   echo_yellow "Check logs with: docker logs $CONTAINER_NAME"
   exit 1
 fi
-

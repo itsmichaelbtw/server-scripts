@@ -1,0 +1,25 @@
+# Gatus Configuration
+# For complete documentation, visit: https://github.com/TwiN/gatus
+ui:
+  title: Gatus
+  description: Status page powered by Gatus
+
+metrics: true
+
+storage:
+  type: sqlite
+  path: /data/gatus.db
+  caching: true
+
+endpoints:
+  - name: GitHub
+    url: https://github.com
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+
+# # Alert configuration (optional)
+# alerting:
+#   discord: ~
+#   slack: ~
+#   telegram: ~

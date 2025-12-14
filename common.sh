@@ -473,6 +473,49 @@ validate_and_cleanup() {
   echo -e "${GREEN}Applied new config: $TARGET_FILE${RESET}"
 }
 
+# Function to configure UFW to allow WireGuard subnet access to a specific port
+# Usage: configure_ufw_for_wireguard port_number [proto]
+# Example:
+#   configure_ufw_for_wireguard 8080 tcp
+#   configure_ufw_for_wireguard 53 udp
+# Notes:
+#   - Checks if both ufw and WireGuard are installed
+#   - Detects WireGuard subnet automatically
+#   - Proto defaults to "tcp" if not specified
+configure_ufw_for_wireguard() {
+  local PORT="$1"
+  local PROTO="${2:-tcp}"
+  
+  if ! does_cmd_exist "ufw" 2>/dev/null; then
+    return 0
+  fi
+  
+  if ! does_cmd_exist "wg" 2>/dev/null; then
+    return 0
+  fi
+  
+  if ! ip link show "wg0" &>/dev/null; then
+    echo_yellow "WireGuard interface not yet active. Skipping UFW rule."
+    return 0
+  fi
+  
+  local WG_SUBNET
+  WG_SUBNET=$(ip -4 addr show "wg0" 2>/dev/null | grep -oP 'inet \K[\d.]+/\d+' || true)
+  
+  if [[ -z "$WG_SUBNET" ]]; then
+    echo_yellow "WireGuard subnet not yet configured. Skipping UFW rule."
+    return 0
+  fi
+  
+  if ufw allow from "$WG_SUBNET" to any port "$PORT" proto "$PROTO" 2>/dev/null; then
+    echo_green "UFW: Allowed $PROTO/$PORT from WireGuard subnet ($WG_SUBNET)"
+  else
+    echo_yellow "UFW rule may already exist or failed to add"
+  fi
+  
+  ufw reload 2>/dev/null || true
+}
+
 # Function to render a template config, apply sed substitutions, backup, and install
 # Usage: render_template_config <template> <target> <chmod> <sed_expr1> [<sed_expr2> ...] [--validate "validate_cmd"]
 # Example:

@@ -5,11 +5,14 @@ SCRIPT_DIR=$(dirname "$(realpath "$0")")
 ROOT_DIR=$(realpath "$SCRIPT_DIR/../..")
 source "$ROOT_DIR/common.sh"
 
-SCRIPT_NAME="01-filebrowser"
-SCRIPT_DESC="Deploy FileBrowser web GUI for personal file management via Docker."
 
-CONTAINER_NAME=filebrowser
-CONTAINER_PORT=5050
+SCRIPT_NAME="04-vaultwarden"
+SCRIPT_DESC="Deploy Vaultwarden self-hosted password manager via Docker."
+
+CONTAINER_NAME=vaultwarden
+CONTAINER_PORT=4050
+VAULTWARDEN_DATA_DIR="${1:-/vw-data}"
+ADMIN_TOKEN=$(openssl rand -base64 32)
 
 print_script_header
 validate_environment
@@ -20,28 +23,24 @@ remove_docker_container "$CONTAINER_NAME"
 echo_deploying_container "$CONTAINER_NAME" "$CONTAINER_PORT"
 configure_ufw_for_wireguard "$CONTAINER_PORT" tcp
 
-read_from_terminal -rp "Enter host directory to serve for personal files (default: /srv/files): " FILE_DIR
-FILE_DIR="${FILE_DIR:-/srv/files}"
-ensure_directory "$FILE_DIR" 755
+ensure_directory "$VAULTWARDEN_DATA_DIR" 700
 
 docker run -d \
   --name="$CONTAINER_NAME" \
   --network="$DOCKER_NETWORK_NAME" \
   --restart=unless-stopped \
   -p "$CONTAINER_PORT:80" \
-  -v "$FILE_DIR:/srv" \
-  -v /var/log:/srv/log:ro \
-  -v filebrowser_config:/config \
-  -e PUID=$(id -u) \
-  -e PGID=$(id -g) \
-  filebrowser/filebrowser \
-  --root /srv \
-  --noauth
+  -v "$VAULTWARDEN_DATA_DIR:/data/" \
+  -e ADMIN_TOKEN="$ADMIN_TOKEN" \
+  -e LOG_LEVEL=info \
+  vaultwarden/server:latest
 
 sleep 3
 
 if verify_container_is_running "$CONTAINER_NAME"; then
   echo_green "$CONTAINER_NAME container is running"
+  echo_blue "Admin panel access token (save this): $ADMIN_TOKEN"
+  echo_blue "Data persisted in: $VAULTWARDEN_DATA_DIR"
   echo_blue "Access at: http://localhost:$CONTAINER_PORT"
   exit 0
 else
@@ -50,4 +49,6 @@ else
   exit 1
 fi
 
-# I dont have permissions for some log files
+# https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page#secure-the-admin_token
+# also infiniteily spins, could be docker error
+# it was browser error Unhandled error in angular Error: Could not instantiate WebCryptoFunctionService. Could not locate Subtle crypto.
