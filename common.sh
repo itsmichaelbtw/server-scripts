@@ -10,6 +10,8 @@ BLUE="\033[1;34m"
 RED="\033[1;31m"
 RESET="\033[0m"
 
+DOCKER_NETWORK_NAME="server_network"
+
 # Function to print a newline
 # Usage: echo_newline
 # Example:
@@ -163,11 +165,6 @@ require_cmd() {
       echo_red "[ERROR] Failed to install $PKG_NAME via apt-get"
       return 1
     }
-  elif command -v yum &>/dev/null; then
-    yum install -y "$PKG_NAME" >/dev/null 2>&1 || {
-      echo_red "[ERROR] Failed to install $PKG_NAME via yum"
-      return 1
-    }
   else
     echo_red "[ERROR] No package manager found (apt-get, yum, or brew). Please install $PKG_NAME manually."
     return 1
@@ -195,19 +192,18 @@ get_actual_user() {
 }
 
 # Function to display service URL after deployment
-# Usage: display_service_url "Service Name" port_number
+# Usage: display_service_url "Service Name" port_number [path]
 # Example:
 #   display_service_url "MyApp" 8080
-# Determines server IP and displays formatted access URL
+#   display_service_url "Loki" 3100 "/loki/api/v1/query"
+# Displays formatted localhost access URL with optional path
 display_service_url() {
   local SERVICE_NAME="$1"
   local PORT="$2"
-  
-  local SERVER_IP
-  SERVER_IP=$(ip route get 1 | awk '{print $7; exit}')
+  local PATH="${3:-}"
 
   echo -e "${GREEN}$SERVICE_NAME deployed successfully.${RESET}"
-  echo -e "${YELLOW}Access the service at: http://$SERVER_IP:$PORT${RESET}"
+  echo -e "${YELLOW}Access the service at: http://localhost:$PORT$PATH${RESET}"
 }
 
 # Function to prompt user for yes/no input
@@ -234,25 +230,6 @@ prompt_yes_no() {
       *) echo -e "${YELLOW}Please enter Y or N.${RESET}" ;;
     esac
   done
-}
-
-# Function to check if Docker is installed
-# Usage: ensure_docker
-# Example:
-#   ensure_docker
-# Exits with error message if Docker is not installed
-ensure_docker() {
-  if ! does_cmd_exist "docker" 2>/dev/null; then
-    echo -e "${RED}[ERROR] Docker is not installed. Please run 04-orchestration/00-docker first.${RESET}"
-    exit 1
-  fi
-  
-  if ! systemctl is-active --quiet docker; then
-    echo -e "${RED}[ERROR] Docker service is not running. Please start Docker service.${RESET}"
-    exit 1
-  fi
-  
-  echo_green "Docker is installed and running."
 }
 
 # Function to prompt for a valid network port number
@@ -473,6 +450,26 @@ validate_and_cleanup() {
   echo -e "${GREEN}Applied new config: $TARGET_FILE${RESET}"
 }
 
+# Function to ensure a directory exists with proper permissions
+# Usage: ensure_directory "/path/to/dir" [permissions]
+# Example:
+#   ensure_directory "/etc/prometheus" 755
+#   ensure_directory "/data/config" 700
+# Parameters:
+#   $1: Directory path to create/ensure exists
+#   $2: Permissions (optional, defaults to 755)
+ensure_directory() {
+  local DIR_PATH="$1"
+  local PERMS="${2:-755}"
+  
+  if [[ ! -d "$DIR_PATH" ]]; then
+    echo_yellow "Creating directory at $DIR_PATH..."
+    mkdir -p "$DIR_PATH"
+  fi
+
+  chmod "$PERMS" "$DIR_PATH"
+}
+
 # Function to configure UFW to allow WireGuard subnet access to a specific port
 # Usage: configure_ufw_for_wireguard port_number [proto]
 # Example:
@@ -481,21 +478,29 @@ validate_and_cleanup() {
 # Notes:
 #   - Checks if both ufw and WireGuard are installed
 #   - Detects WireGuard subnet automatically
+#   - Always allows localhost access
 #   - Proto defaults to "tcp" if not specified
 configure_ufw_for_wireguard() {
   local PORT="$1"
   local PROTO="${2:-tcp}"
   
-  if ! does_cmd_exist "ufw" 2>/dev/null; then
+  if ! does_cmd_exist "ufw"; then
     return 0
   fi
   
-  if ! does_cmd_exist "wg" 2>/dev/null; then
+  # Allow localhost access (always)
+  if ufw allow from 127.0.0.1 to any port "$PORT" proto "$PROTO" 2>/dev/null; then
+    echo_green "UFW: Allowed $PROTO/$PORT from localhost (127.0.0.1)"
+  fi
+  
+  if ! does_cmd_exist "wg"; then
+    ufw reload 2>/dev/null || true
     return 0
   fi
   
   if ! ip link show "wg0" &>/dev/null; then
-    echo_yellow "WireGuard interface not yet active. Skipping UFW rule."
+    echo_yellow "WireGuard interface not yet active. Localhost access enabled."
+    ufw reload 2>/dev/null || true
     return 0
   fi
   
@@ -503,7 +508,8 @@ configure_ufw_for_wireguard() {
   WG_SUBNET=$(ip -4 addr show "wg0" 2>/dev/null | grep -oP 'inet \K[\d.]+/\d+' || true)
   
   if [[ -z "$WG_SUBNET" ]]; then
-    echo_yellow "WireGuard subnet not yet configured. Skipping UFW rule."
+    echo_yellow "WireGuard subnet not yet configured. Localhost access enabled."
+    ufw reload 2>/dev/null || true
     return 0
   fi
   
@@ -517,15 +523,29 @@ configure_ufw_for_wireguard() {
 }
 
 # Function to render a template config, apply sed substitutions, backup, and install
-# Usage: render_template_config <template> <target> <chmod> <sed_expr1> [<sed_expr2> ...] [--validate "validate_cmd"]
+# Usage: render_template_config <template> <target> <chmod> [<sed_expr1> ...] [--validate "validate_cmd"]
 # Example:
 #   render_template_config "$SCRIPT_DIR/sshd_config" "/etc/ssh/sshd_config" 600 \
 #     -e "s|{{SSH_PORT}}|$SSH_PORT|g" -e "s|{{DISABLE_PASSWORD}}|$DISABLE_PASSWORD|g" --validate "sshd -t -f"
+# Notes:
+#   - Silently returns if template file doesn't exist (no error)
+#   - Only deploys if target file doesn't already exist
+#   - Backs up existing config before overwriting
 render_template_config() {
   local TEMPLATE_FILE="$1"
   local TARGET_FILE="$2"
   local PERMS="$3"
   shift 3
+
+  if [[ ! -f "$TEMPLATE_FILE" ]]; then
+    return 0
+  fi
+
+  if [[ -f "$TARGET_FILE" ]]; then
+    echo_yellow "Updating existing config $TARGET_FILE..."
+  fi
+
+  echo_yellow "Deploying default configuration to $TARGET_FILE..."
 
   local VALIDATE_CMD=""
   local SED_ARGS=()
@@ -540,11 +560,6 @@ render_template_config() {
     fi
   done
 
-  if [[ ! -f "$TEMPLATE_FILE" ]]; then
-    echo -e "${RED}[ERROR] Template file not found: $TEMPLATE_FILE${RESET}"
-    exit 1
-  fi
-
   backup_config_file "$TARGET_FILE"
 
   local TEMP_OUTPUT
@@ -557,4 +572,99 @@ render_template_config() {
   fi
 
   validate_and_cleanup "$TEMP_OUTPUT" "$TARGET_FILE" "$PERMS" "$VALIDATE_CMD"
+}
+
+# Function to check if Docker is installed
+# Usage: ensure_docker
+# Example:
+#   ensure_docker
+# Exits with error message if Docker is not installed
+ensure_docker() {
+  if ! does_cmd_exist "docker"; then
+    echo -e "${RED}[ERROR] Docker is not installed. Please run 04-orchestration/00-docker first.${RESET}"
+    exit 1
+  fi
+  
+  if ! systemctl is-active --quiet docker; then
+    echo -e "${RED}[ERROR] Docker service is not running. Please start Docker service.${RESET}"
+    exit 1
+  fi
+  
+  echo_green "Docker is installed and running."
+}
+
+# Function to ensure Docker network exists
+# Usage: ensure_docker_network
+# Example:
+#   DOCKER_NETWORK_NAME="monitoring"
+#   ensure_docker_network
+# Notes:
+#   - Uses DOCKER_NETWORK_NAME variable (must be set before calling)
+#   - Creates the network if it doesn't exist
+#   - Silently succeeds if network already exists
+ensure_docker_network() {
+  if [[ -z "$DOCKER_NETWORK_NAME" ]]; then
+    echo_red "[ERROR] DOCKER_NETWORK_NAME is not set"
+    return 1
+  fi
+  
+  if docker network ls --format '{{.Name}}' | grep -q "^${DOCKER_NETWORK_NAME}$"; then
+    echo_green "Docker network '$DOCKER_NETWORK_NAME' already exists"
+  else
+    echo_yellow "Creating Docker network '$DOCKER_NETWORK_NAME'..."
+    docker network create "$DOCKER_NETWORK_NAME" >/dev/null 2>&1
+    echo_green "Docker network '$DOCKER_NETWORK_NAME' created successfully"
+  fi
+}
+
+# Function to check if a Docker container exists
+# Usage: does_container_exist "container_name"
+# Returns 0 if exists, 1 if not
+does_container_exist() {
+  local CONTAINER_NAME="$1"
+
+  docker inspect "$CONTAINER_NAME" >/dev/null 2>&1
+}
+
+# Function to remove an existing Docker container
+# Silently succeeds if container doesn't exist
+remove_docker_container() {
+  local CONTAINER_NAME="$1"
+
+  if does_container_exist "$CONTAINER_NAME"; then
+    echo_yellow "Stopping and removing existing $CONTAINER_NAME container..."
+    docker stop "$CONTAINER_NAME" >/dev/null 2>&1 || true
+    docker rm "$CONTAINER_NAME" >/dev/null 2>&1 || true
+  else
+    echo_yellow "Container '$CONTAINER_NAME' does not exist"
+  fi
+}
+
+# Function to verify if a Docker container is running
+# Returns 0 if running, 1 if not
+verify_container_is_running() {
+  local CONTAINER_NAME="$1"
+
+  if does_container_exist "$CONTAINER_NAME"; then
+    if docker inspect -f '{{.State.Running}}' "$CONTAINER_NAME" 2>/dev/null | grep -q "true"; then
+      return 0
+    fi
+  fi
+
+  return 1
+}
+
+# Function to display deployment initiation message
+# Usage: echo_deploying_container "container_name" "port"
+# Example:
+#   echo_deploying_container "loki" "3100"
+#   echo_deploying_container "prometheus" "9090"
+# Notes:
+#   - Call before docker run command
+#   - Provides consistent messaging across all deployment scripts
+echo_deploying_container() {
+  local CONTAINER_NAME="$1"
+  local PORT="$2"
+  
+  echo_yellow "Deploying $CONTAINER_NAME container on port $PORT..."
 }
