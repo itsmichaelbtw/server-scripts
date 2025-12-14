@@ -1,0 +1,43 @@
+# AlertManager Configuration
+# Alert routing and notification delivery
+
+global:
+  resolve_timeout: 5m
+
+# The root route with all parameters
+route:
+  receiver: 'default'
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+
+# Inhibition rules
+inhibit_rules: []
+
+# Receivers (notification destinations)
+receivers:
+  - name: 'default'
+    # Uncomment and configure your preferred notification channel:
+    
+    # Slack notifications
+    # slack_configs:
+    #   - api_url: 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
+    #     channel: '#alerts'
+    #     title: 'Alert: {{ .GroupLabels.alertname }}'
+    #     text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+    
+    # Discord notifications
+    # discord_configs:
+    #   - webhook_url: 'https://discordapp.com/api/webhooks/YOUR/WEBHOOK/URL'
+    #     title: 'Alert: {{ .GroupLabels.alertname }}'
+    
+    # Email notifications
+    # email_configs:
+    #   - to: 'alerts@example.com'
+    #     from: 'alertmanager@example.com'
+    #     smarthost: 'smtp.example.com:587'
+    #     auth_username: 'user@example.com'
+    #     auth_password: 'password'
+    #     headers:
+    #       Subject: 'Alert: {{ .GroupLabels.alertname }}'

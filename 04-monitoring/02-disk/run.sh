@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# File path: 04-monitoring/03-disk/run.sh
+# File path: 04-monitoring/02-disk/run.sh
 # Purpose: Install and configure disk monitoring tools including SMART and I/O statistics, with optional CRON scheduling.
 
 # just straight up failed
@@ -10,7 +10,7 @@ SCRIPT_DIR=$(dirname "$(realpath "$0")")
 ROOT_DIR=$(realpath "$SCRIPT_DIR/../..")
 source "$ROOT_DIR/common.sh"
 
-SCRIPT_NAME="03-disk"
+SCRIPT_NAME="02-disk"
 SCRIPT_DESC="Install disk monitoring tools, run initial health checks, and optionally schedule periodic monitoring via CRON."
 
 print_script_header
