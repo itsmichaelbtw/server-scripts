@@ -9,7 +9,7 @@ SCRIPT_NAME="01-filebrowser"
 SCRIPT_DESC="Deploy FileBrowser web GUI for personal file management via Docker."
 
 CONTAINER_NAME=filebrowser
-CONTAINER_PORT=5050
+CONTAINER_PORT=4025
 
 print_script_header
 validate_environment

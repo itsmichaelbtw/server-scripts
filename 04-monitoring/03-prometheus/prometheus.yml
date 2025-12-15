@@ -10,23 +10,23 @@ global:
 alerting:
   alertmanagers:
     - static_configs:
-        - targets: []
+        - targets: ['alertmanager:3075']
 
 rule_files: []
 
 scrape_configs:
   - job_name: 'prometheus'
     static_configs:
-      - targets: ['localhost:9090']
+      - targets: ['localhost:3025']
 
   - job_name: 'alloy'
     static_configs:
-      - targets: ['alloy:12345']
+      - targets: ['alloy:3100']
     scrape_interval: 10s
     metrics_path: '/metrics'
 
   - job_name: 'loki'
     static_configs:
-      - targets: ['loki:3100']
+      - targets: ['loki:3050']
     scrape_interval: 10s
     metrics_path: '/metrics'

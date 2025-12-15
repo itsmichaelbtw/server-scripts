@@ -10,7 +10,7 @@ SCRIPT_NAME="04-loki"
 SCRIPT_DESC="Deploy Loki log aggregation and indexing."
 
 CONTAINER_NAME=loki
-CONTAINER_PORT=3100
+CONTAINER_PORT=3050
 LOKI_CONFIG="/etc/loki/loki-config.yaml"
 LOKI_DATA_DIR="/var/lib/loki"
 LOKI_VERSION="3.6.2"
@@ -53,7 +53,7 @@ if verify_container_is_running "$CONTAINER_NAME"; then
   echo_green "$CONTAINER_NAME container is running"
   echo_blue "Configuration: $LOKI_CONFIG"
   echo_blue "Data directory: $LOKI_DATA_DIR"
-  echo_blue "Add to Grafana: Data Source → Loki → URL: http://loki:3100"
+  echo_blue "Add to Grafana: Data Source → Loki → URL: http://loki:3050"
   echo_blue "Access at: http://localhost:$CONTAINER_PORT"
   exit 0
 else

@@ -9,7 +9,7 @@ SCRIPT_NAME="05-alertmanager"
 SCRIPT_DESC="Deploy AlertManager for alert routing and notification delivery."
 
 CONTAINER_NAME=alertmanager
-CONTAINER_PORT=9093
+CONTAINER_PORT=3075
 TEMPLATE_FILE="$SCRIPT_DIR/alertmanager.yml"
 CONFIG_DIR="/etc/alertmanager"
 CONFIG_FILE="$CONFIG_DIR/alertmanager.yml"
@@ -49,7 +49,6 @@ if verify_container_is_running "$CONTAINER_NAME"; then
   echo_blue "Configuration: $CONFIG_FILE"
   echo_blue "Data directory: $ALERTMANAGER_DATA_DIR"
   echo_yellow "Next: Edit $CONFIG_FILE to configure notification channels"
-  echo_yellow "Then update Prometheus config: alerting.alertmanagers.static_configs.targets to ['alertmanager:9093']"
   echo_blue "Access at: http://localhost:$CONTAINER_PORT"
   exit 0
 else
