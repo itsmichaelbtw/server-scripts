@@ -21,10 +21,13 @@ CLIENT_TEMPLATE="$SCRIPT_DIR/client.conf"
 TARGET_USER=$(get_actual_user)
 TARGET_HOME=$(eval echo "~$TARGET_USER")
 CLIENT_DIR="$TARGET_HOME/wireguard"
+
 if [[ ! -d "$CLIENT_DIR" ]]; then
   mkdir -p "$CLIENT_DIR"
-  chmod 700 "$CLIENT_DIR"
 fi
+
+chown "$TARGET_USER:$TARGET_USER" "$CLIENT_DIR"
+chmod 700 "$CLIENT_DIR"
 
 require_cmd "awk"
 require_cmd "grep"
@@ -156,6 +159,7 @@ EOF
   fi
 
   CLIENT_CONF_FILE="$CLIENT_DIR/${CLIENT_NAME}.conf"
+
   render_template_config "$CLIENT_TEMPLATE" "$CLIENT_CONF_FILE" "600" \
     -e "s|{{CLIENT_PRIVATE_KEY}}|$CLIENT_PRIVATE_KEY|g" \
     -e "s|{{CLIENT_IP}}|${CLIENT_IP%/*}/32|g" \
@@ -163,7 +167,9 @@ EOF
     -e "s|{{SERVER_ENDPOINT}}|$SERVER_ENDPOINT|g" \
     -e "s|{{SERVER_PORT}}|$WG_PORT|g"
 
+  chown "$TARGET_USER:$TARGET_USER" "$CLIENT_CONF_FILE"
   chmod 600 "$CLIENT_CONF_FILE"
+
   echo_green "Client file created: $CLIENT_CONF_FILE"
 
   echo_yellow "Ensuring qrencode is installed..."
@@ -174,7 +180,10 @@ EOF
 
   QR_FILE="$CLIENT_DIR/${CLIENT_NAME}.png"
   qrencode -o "$QR_FILE" -t PNG < "$CLIENT_CONF_FILE"
+
+  chown "$TARGET_USER:$TARGET_USER" "$QR_FILE"
   chmod 600 "$QR_FILE"
+  
   echo_green "PNG written: $QR_FILE"
 }
 
