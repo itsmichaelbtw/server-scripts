@@ -1,0 +1,58 @@
+livedebugging {
+  enabled = true
+}
+
+discovery.docker "docker" {
+  host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "docker_logs" {
+  targets = []
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container_name"
+  }
+
+  rule {
+    target_label = "instance"
+    replacement  = constants.hostname
+  }
+}
+
+loki.source.docker "docker_logs_source" {
+  host          = "unix:///var/run/docker.sock"
+  targets       = discovery.docker.docker.targets
+  relabel_rules = discovery.relabel.docker_logs.rules
+  forward_to    = [loki.write.local.receiver]
+}
+
+local.file_match "custom_logs" {
+  path_targets = [
+    {"__path__" = "/var/log/apt/history.log", "job" = "apt-history"},
+    {"__path__" = "/var/log/apt/term.log", "job" = "apt-term"},
+    {"__path__" = "/var/log/auth.log", "job" = "auth"},
+    {"__path__" = "/var/log/chkrootkit/log.today", "job" = "chkrootkit"},
+    {"__path__" = "/var/log/disk-monitoring.log", "job" = "disk-monitoring"},
+    {"__path__" = "/var/log/fail2ban.log", "job" = "fail2ban"},
+    {"__path__" = "/var/log/kern.log", "job" = "kern"},
+    {"__path__" = "/var/log/lynis.log", "job" = "lynis"},
+    {"__path__" = "/var/log/rkhunter.log", "job" = "rkhunter"},
+    {"__path__" = "/var/log/ufw.log", "job" = "ufw"},
+    {"__path__" = "/var/log/unattended-upgrades/unattended-upgrades.log", "job" = "unattended-upgrades"},
+  ]
+  sync_period = "5s"
+}
+
+loki.source.file "custom_logs_source" {
+  targets    = local.file_match.custom_logs.targets
+  forward_to = [loki.write.local.receiver]
+  tail_from_end = true
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
