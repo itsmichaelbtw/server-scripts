@@ -23,14 +23,14 @@ if [[ ! -f /etc/rkhunter.conf ]]; then
   apt install --reinstall -y rkhunter
 fi
 
-sudo mkdir -p /var/lib/rkhunter/db
-sudo chown root:root /var/lib/rkhunter/db
-sudo chmod 755 /var/lib/rkhunter/db
+mkdir -p /var/lib/rkhunter/db
+chown root:root /var/lib/rkhunter/db
+chmod 755 /var/lib/rkhunter/db
 
 prompt_yes_no "Run initial RKHunter scan now? (This may take several minutes)" "Y"
 if [[ "$REPLY" == "Y" ]]; then
   echo_yellow "Running initial RKHunter scan using the default bundled database..."
-  if sudo rkhunter --propupd 2>&1 && sudo rkhunter --check --skip-keypress 2>&1; then
+  if rkhunter --propupd 2>&1 && rkhunter --check --skip-keypress 2>&1; then
     echo_green "RKHunter installation, configuration, and initial scan complete."
   else
     echo_yellow "[WARNING] RKHunter scan encountered an error, but continuing with the rest of the script..."

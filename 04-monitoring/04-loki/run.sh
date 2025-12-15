@@ -20,16 +20,16 @@ validate_environment
 ensure_docker
 ensure_docker_network
 
-sudo mkdir -p "$(dirname "$LOKI_CONFIG")"
+mkdir -p "$(dirname "$LOKI_CONFIG")"
 ensure_directory "$LOKI_DATA_DIR" 755
-sudo chown -R 10001:10001 "$LOKI_DATA_DIR"
-sudo mkdir -p "$LOKI_DATA_DIR/chunks" "$LOKI_DATA_DIR/index"
-sudo chown -R 10001:10001 "$LOKI_DATA_DIR/chunks" "$LOKI_DATA_DIR/index"
+chown -R 10001:10001 "$LOKI_DATA_DIR"
+mkdir -p "$LOKI_DATA_DIR/chunks" "$LOKI_DATA_DIR/index"
+chown -R 10001:10001 "$LOKI_DATA_DIR/chunks" "$LOKI_DATA_DIR/index"
 
 if [ ! -f "$LOKI_CONFIG" ]; then
   echo_yellow "Downloading Loki configuration..."
-  sudo wget -q "https://raw.githubusercontent.com/grafana/loki/v${LOKI_VERSION}/cmd/loki/loki-local-config.yaml" -O "$LOKI_CONFIG"
-  sudo chown 10001:10001 "$LOKI_CONFIG"
+  wget -q "https://raw.githubusercontent.com/grafana/loki/v${LOKI_VERSION}/cmd/loki/loki-local-config.yaml" -O "$LOKI_CONFIG"
+  chown 10001:10001 "$LOKI_CONFIG"
   echo_green "Downloaded loki-config.yaml"
 fi
 
