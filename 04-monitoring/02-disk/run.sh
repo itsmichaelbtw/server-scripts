@@ -73,6 +73,6 @@ echo_yellow "Running initial disk usage and I/O stats..."
 echo_green "Initial disk monitoring complete. Output saved to ${DISK_LOG}."
 
 DISK_CRON_CMD="{ echo -e '\n==== Disk Monitoring Run:' \$(date) '===='; df -h; echo -e '\nI/O statistics summary (iostat):'; iostat -x 1 1; } >> $DISK_LOG 2>&1"
-setup_cron_job "$DISK_CRON_CMD" "*/15 * * * *" "disk-monitoring"
+setup_cron_job "$DISK_CRON_CMD" "30 12 * * *" "disk-monitoring"
 
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"
