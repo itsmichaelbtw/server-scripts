@@ -46,8 +46,20 @@ else
   echo_green "User '${USER_NAME}' created."
 fi
 
+echo_yellow "Step 2: Setting password..."
+prompt_yes_no "Do you want to set a password for '${USER_NAME}'?" "Y"
+if [[ "$REPLY" == "Y" ]]; then
+  if passwd "$USER_NAME"; then
+    echo_green "Password set for '${USER_NAME}'."
+  else
+    echo_red "[ERROR] Failed to set password for '${USER_NAME}'."
+  fi
+else
+  echo_yellow "Skipping password setup for '${USER_NAME}'."
+fi
+
 if [[ "$ENABLE_SUDO" == "true" ]]; then
-  echo_yellow "Step 2: Adding '${USER_NAME}' to sudo group..."
+  echo_yellow "Step 3: Adding '${USER_NAME}' to sudo group..."
 
   usermod -aG sudo "$USER_NAME"
   echo_green "'${USER_NAME}' added to sudo group."
@@ -67,5 +79,10 @@ fi
 
 echo_newline
 echo_green "User and group configuration complete."
-echo_green "Run 'ssh_keygen.sh' to generate and configure SSH keys for this user"
+echo_newline
+echo_yellow "⚠️  IMPORTANT: Before running 03-ssh/run.sh"
+echo_yellow "Run the following command locally to set up SSH keys for '${USER_NAME}':"
+echo_yellow "  ./ssh_keygen.sh"
+echo_yellow "This ensures SSH key authentication is properly configured for all users."
+echo_newline
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"
