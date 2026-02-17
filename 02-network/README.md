@@ -1,6 +1,6 @@
 # 🌐 02-network
 
-Networking, VPN, time synchronization, and DNS management for Ubuntu servers. This directory contains scripts for WireGuard VPN setup, NTP/Chrony time synchronization, and Cloudflare Tunnel configuration.
+Networking, VPN, time synchronization, and DNS management for Ubuntu servers. This directory contains scripts for WireGuard VPN setup and NTP/Chrony time synchronization.
 
 ## Directory Overview
 
@@ -10,7 +10,8 @@ The `02-network` directory contains the following scripts executed in sequence:
 |--------|---------|
 | `00-wireguard` | Install WireGuard VPN and configure server |
 | `01-chrony` | Install and configure Chrony NTP service |
-| `03-cloudflare` | Setup Cloudflare Tunnel for secure access |
+
+**Note:** Kernel module setup is handled in `00-system/05-kernel-modules` as it's foundational system configuration.
 
 ---
 
@@ -78,26 +79,6 @@ The `chrony.conf` template file is located alongside `run.sh`.
 
 ---
 
-### 03-cloudflare: Cloudflare Tunnel Setup
-
-**Purpose:** Setup Cloudflare Tunnel for secure access to internal services.
-
-**What it does:**
-- Installs Cloudflare Tunnel (cloudflared) daemon
-- Prompts for Cloudflare API token
-- Prompts for tunnel name and hostnames
-- Maps hostnames to local service ports
-- Creates tunnel configuration
-- Enables systemd service
-
-**Usage:**
-
-```bash
-sudo /path/to/02-network/03-cloudflare/run.sh
-```
-
----
-
 ## Master Script
 
 The `run.sh` file in this directory orchestrates execution of all subscripts:
@@ -124,4 +105,5 @@ Scripts run in numerical order:
 
 1. `00-wireguard` - VPN setup
 2. `01-chrony` - Time synchronization
-3. `03-cloudflare` - Cloudflare Tunnel
+
+**Prerequisites:** Kernel modules should be loaded via `00-system/05-kernel-modules` before networking setup.

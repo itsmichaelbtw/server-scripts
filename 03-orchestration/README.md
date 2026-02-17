@@ -1,16 +1,14 @@
 # 🐳 03-orchestration
 
-Container orchestration and service management for Ubuntu servers. This directory contains scripts for Docker installation, k3s lightweight Kubernetes, and Traefik ingress controller setup.
+Container orchestration and service management for Ubuntu servers. This directory contains scripts for Docker installation and container management.
 
 ## Directory Overview
 
 The `03-orchestration` directory contains the following scripts executed in sequence:
 
 | Script | Purpose |
-|--------|---------|
+|--------|----------|
 | `00-docker` | Install Docker Engine and Docker Compose |
-| `01-k3s` | Install k3s lightweight Kubernetes cluster |
-| `02-traefik` | Install Traefik ingress controller on k3s |
 
 ---
 
@@ -33,54 +31,6 @@ The `03-orchestration` directory contains the following scripts executed in sequ
 ```bash
 sudo /path/to/03-orchestration/00-docker/run.sh
 ```
-
----
-
-### 01-k3s: k3s Kubernetes Installation
-
-**Purpose:** Install k3s lightweight Kubernetes cluster (server or agent).
-
-**What it does:**
-- Prompts for role (server/agent)
-- Prompts for node name
-- Installs k3s without Traefik
-- Configures kubectl for a deployment user
-- Verifies k3s installation
-
-**Usage:**
-
-```bash
-sudo /path/to/03-orchestration/01-k3s/run.sh
-```
-
----
-
-### 02-traefik: Traefik Ingress Controller
-
-**Purpose:** Install Traefik ingress controller on k3s with ACME/Cloudflare DNS.
-
-**What it does:**
-- Checks k3s installation
-- Prompts for dashboard enablement
-- Prompts for ACME email and Cloudflare API token
-- Installs Helm if needed
-- Applies Traefik configuration from template
-- Installs/upgrades Traefik via Helm
-
-**Usage:**
-
-```bash
-sudo /path/to/03-orchestration/02-traefik/run.sh
-```
-
-**Configuration File:**
-
-The `traefik.conf` template file is located alongside `run.sh`. Template variables:
-
-| Variable | Description |
-|----------|-------------|
-| `{{DASHBOARD_ENABLED}}` | Enable Traefik dashboard (true/false) |
-| `{{ACME_EMAIL}}` | Email for ACME certificate registration |
 
 ---
 

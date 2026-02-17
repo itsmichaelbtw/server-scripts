@@ -63,10 +63,9 @@ When you run `./copy.sh`, it will load these defaults and show them in the promp
 sudo ./00-system/run.sh          # System foundation
 sudo ./01-security/run.sh        # Security hardening
 sudo ./02-network/run.sh         # Networking setup
-sudo ./03-disk/run.sh            # Disk management
-sudo ./04-orchestration/run.sh   # Container setup
-sudo ./05-monitoring/run.sh      # Monitoring tools
-sudo ./06-gui/run.sh             # Web dashboards
+sudo ./03-orchestration/run.sh   # Container setup
+sudo ./04-monitoring/run.sh      # Monitoring tools
+sudo ./05-gui/run.sh             # Web dashboards
 ```
 
 ## Installation
@@ -91,10 +90,9 @@ All scripts are executable by default. If needed, run:
 | **00-system** | System foundation (updates, utilities, user, SSH, cron) | [README](./00-system/README.md) |
 | **01-security** | Security hardening (firewall, fail2ban, port-knocking, apparmor, sysctl, grub, rootkit detection, auditing) | [README](./01-security/README.md) |
 | **02-network** | Networking & VPN (WireGuard, NTP, Cloudflare Tunnel) | [README](./02-network/README.md) |
-| **03-disk** | Disk & storage (RAID, filesystem, monitoring) | [README](./03-disk/README.md) |
-| **04-orchestration** | Container orchestration (Docker, k3s, Traefik) | [README](./04-orchestration/README.md) |
-| **05-monitoring** | Performance monitoring (sysstat, process tools) | [README](./05-monitoring/README.md) |
-| **06-gui** | Web dashboards (NetData, FileBrowser, Homer, Crontab-UI, Gatus) | [README](./06-gui/README.md) |
+| **03-orchestration** | Container orchestration (Docker, k3s, Traefik) | [README](./03-orchestration/README.md) |
+| **04-monitoring** | Performance monitoring (sysstat, process tools, disk monitoring) | [README](./04-monitoring/README.md) |
+| **05-gui** | Web dashboards (NetData, FileBrowser, Homer, Crontab-UI, Gatus) | [README](./05-gui/README.md) |
 
 ## Utilities
 

@@ -13,6 +13,7 @@ The `00-system` directory contains the following initialization scripts executed
 | `02-user` | Create system users with optional sudo privileges |
 | `03-ssh` | Harden SSH configuration with custom settings |
 | `04-cron` | Enable and configure cron service |
+| `05-kernel-modules` | Load and persist kernel modules required for Kubernetes |
 
 ---
 
@@ -114,6 +115,33 @@ sudo /path/to/00-system/04-cron/run.sh
 
 ---
 
+### 05-kernel-modules: Kubernetes Kernel Modules
+
+**Purpose:** Load and persist kernel modules required for Kubernetes networking and container operations.
+
+**What it does:**
+- Creates `/etc/modules-load.d/kubernetes.conf` with required modules
+- Loads `br_netfilter` kernel module for bridge network filtering
+- Loads `overlay` kernel module for container storage
+- Verifies modules are loaded via `lsmod`
+- Configures sysctl settings for Kubernetes networking:
+  - `net.bridge.bridge-nf-call-iptables=1`
+  - `net.bridge.bridge-nf-call-ip6tables=1`
+  - `net.ipv4.ip_forward=1`
+- Persists sysctl settings to `/etc/sysctl.d/99-kubernetes.conf`
+
+**Usage:**
+
+```bash
+sudo /path/to/00-system/05-kernel-modules/run.sh
+```
+
+**Prerequisites:** None - can run after system updates
+
+**Notes:** This script should be run before container orchestration setup (Docker, Kubernetes, etc.) to ensure networking and storage modules are available.
+
+---
+
 ## Master Script
 
 The `run.sh` file in this directory orchestrates execution of all subscripts:
@@ -143,3 +171,4 @@ Scripts run in numerical order to ensure dependencies are met:
 3. `02-user` - Create users
 4. `03-ssh` - Configure SSH
 5. `04-cron` - Enable cron
+6. `05-kernel-modules` - Load Kubernetes kernel modules

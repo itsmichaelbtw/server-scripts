@@ -10,13 +10,12 @@ The `01-security` directory contains the following scripts executed in sequence:
 |--------|---------|
 | `00-firewall` | Configure UFW firewall with custom rules |
 | `01-fail2ban` | Install Fail2Ban for brute-force protection |
-| `02-port-knocking` | Configure port-knocking with knockd |
-| `03-apparmor` | Install and enable AppArmor mandatory access control |
-| `04-sysctl` | Apply kernel/network hardening via sysctl |
-| `05-grub` | Harden GRUB bootloader |
-| `06-rkhunter` | Install RKHunter for rootkit detection |
-| `07-chkrootkit` | Install and run Chkrootkit rootkit scanner |
-| `08-lynis` | Install Lynis for security auditing |
+| `02-apparmor` | Install and enable AppArmor mandatory access control |
+| `03-sysctl` | Apply kernel/network hardening via sysctl |
+| `04-grub` | Harden GRUB bootloader |
+| `05-rkhunter` | Install RKHunter for rootkit detection |
+| `06-chkrootkit` | Install and run Chkrootkit rootkit scanner |
+| `07-lynis` | Install Lynis for security auditing |
 
 ---
 
@@ -69,34 +68,7 @@ The `jail.local` template file is located alongside `run.sh`. Template variables
 
 ---
 
-### 02-port-knocking: Knockd Port-Knocking
-
-**Purpose:** Install and configure knockd for port-knocking protection.
-
-**What it does:**
-- Prompts for three knock sequence ports and target port
-- Installs knockd service
-- Configures knock sequence using template
-- Enables service
-
-**Usage:**
-
-```bash
-sudo /path/to/01-security/02-port-knocking/run.sh
-```
-
-**Configuration File:**
-
-The `knockd.conf` template file is located alongside `run.sh`. Template variables:
-
-| Variable | Description |
-|----------|-------------|
-| `{{KNOCK_1}}, {{KNOCK_2}}, {{KNOCK_3}}` | Port sequence to knock |
-| `{{TARGET_PORT}}` | Port to open after successful knock |
-
----
-
-### 03-apparmor: AppArmor Mandatory Access Control
+### 02-apparmor: AppArmor Mandatory Access Control
 
 **Purpose:** Install and enable AppArmor for mandatory access control.
 
@@ -109,12 +81,12 @@ The `knockd.conf` template file is located alongside `run.sh`. Template variable
 **Usage:**
 
 ```bash
-sudo /path/to/01-security/03-apparmor/run.sh
+sudo /path/to/01-security/02-apparmor/run.sh
 ```
 
 ---
 
-### 04-sysctl: Kernel & Network Hardening
+### 03-sysctl: Kernel & Network Hardening
 
 **Purpose:** Apply system-level hardening via sysctl configuration.
 
@@ -127,7 +99,7 @@ sudo /path/to/01-security/03-apparmor/run.sh
 **Usage:**
 
 ```bash
-sudo /path/to/01-security/04-sysctl/run.sh
+sudo /path/to/01-security/03-sysctl/run.sh
 ```
 
 **Configuration File:**
@@ -136,7 +108,7 @@ The `sysctl.conf` template file is located alongside `run.sh` and contains harde
 
 ---
 
-### 05-grub: GRUB Bootloader Hardening
+### 04-grub: GRUB Bootloader Hardening
 
 **Purpose:** Harden GRUB bootloader configuration.
 
@@ -149,7 +121,7 @@ The `sysctl.conf` template file is located alongside `run.sh` and contains harde
 **Usage:**
 
 ```bash
-sudo /path/to/01-security/05-grub/run.sh
+sudo /path/to/01-security/04-grub/run.sh
 ```
 
 **Configuration File:**
@@ -158,7 +130,7 @@ The `grub` template file is located alongside `run.sh`.
 
 ---
 
-### 06-rkhunter: RKHunter Rootkit Detection
+### 05-rkhunter: RKHunter Rootkit Detection
 
 **Purpose:** Install RKHunter and perform rootkit scanning.
 
@@ -172,7 +144,7 @@ The `grub` template file is located alongside `run.sh`.
 **Usage:**
 
 ```bash
-sudo /path/to/01-security/06-rkhunter/run.sh
+sudo /path/to/01-security/05-rkhunter/run.sh
 ```
 
 **Configuration File:**
@@ -181,7 +153,7 @@ The `rkhunter.conf` template file is located alongside `run.sh`.
 
 ---
 
-### 07-chkrootkit: Chkrootkit Rootkit Scanner
+### 06-chkrootkit: Chkrootkit Rootkit Scanner
 
 **Purpose:** Install and run Chkrootkit for rootkit detection.
 
@@ -194,12 +166,12 @@ The `rkhunter.conf` template file is located alongside `run.sh`.
 **Usage:**
 
 ```bash
-sudo /path/to/01-security/07-chkrootkit/run.sh
+sudo /path/to/01-security/06-chkrootkit/run.sh
 ```
 
 ---
 
-### 08-lynis: Security Auditing & Hardening Suggestions
+### 07-lynis: Security Auditing & Hardening Suggestions
 
 **Purpose:** Install Lynis and perform comprehensive security audit.
 
@@ -212,7 +184,7 @@ sudo /path/to/01-security/07-chkrootkit/run.sh
 **Usage:**
 
 ```bash
-sudo /path/to/01-security/08-lynis/run.sh
+sudo /path/to/01-security/07-lynis/run.sh
 ```
 
 ---
@@ -243,10 +215,9 @@ Scripts run in numerical order to ensure proper security layering:
 
 1. `00-firewall` - Enable firewall first
 2. `01-fail2ban` - Protect against brute-force
-3. `02-port-knocking` - Hide SSH port
-4. `03-apparmor` - Mandatory access control
-5. `04-sysctl` - Kernel hardening
-6. `05-grub` - Bootloader hardening
-7. `06-rkhunter` - Rootkit detection
-8. `07-chkrootkit` - Additional rootkit scanning
-9. `08-lynis` - Security audit
+3. `02-apparmor` - Mandatory access control
+4. `03-sysctl` - Kernel hardening
+5. `04-grub` - Bootloader hardening
+6. `05-rkhunter` - Rootkit detection
+7. `06-chkrootkit` - Additional rootkit scanning
+8. `07-lynis` - Security audit
