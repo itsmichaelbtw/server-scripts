@@ -49,7 +49,7 @@ echo_blue() {
 # Example:
 #   echo_red "[ERROR] Something failed"
 echo_red() {
-  echo -e "${RED}$*${RESET}"
+  echo -e "${RED}✗ $*${RESET}"
 }
 
 # Function to read input from terminal, ensuring stdin is /dev/tty
@@ -84,8 +84,8 @@ is_ubuntu() {
 # Exits with error message if not run as root
 ensure_root() {
   if [[ "$EUID" -ne 0 ]]; then
-    echo -e "${RED}[ERROR] This script must be run as root.${RESET}"
-    echo "Try: sudo $0"
+    echo_red "[ERROR] This script must be run as root."
+    echo_yellow "Try: sudo $0"
     exit 1
   fi
 }
@@ -97,7 +97,7 @@ ensure_root() {
 # Exits with error message if not running on Ubuntu
 ensure_ubuntu() {
   if ! is_ubuntu; then
-    echo -e "${RED}[ERROR] This script is intended for Ubuntu systems only.${RESET}"
+    echo_red "[ERROR] This script is intended for Ubuntu systems only."
     exit 1
   fi
 }
@@ -110,7 +110,7 @@ ensure_ubuntu() {
 validate_environment() {
   ensure_root
   ensure_ubuntu
-  echo -e "${GREEN}Environment validated.${RESET}"
+  echo_green "Environment validated."
 }
 
 # Function to load environment variables from .env file
@@ -202,8 +202,8 @@ display_service_url() {
   local PORT="$2"
   local PATH="${3:-}"
 
-  echo -e "${GREEN}$SERVICE_NAME deployed successfully.${RESET}"
-  echo -e "${YELLOW}Access the service at: http://localhost:$PORT$PATH${RESET}"
+  echo_green "$SERVICE_NAME deployed successfully."
+  echo_yellow "Access the service at: http://localhost:$PORT$PATH"
 }
 
 # Function to prompt user for yes/no input
@@ -220,14 +220,14 @@ prompt_yes_no() {
     VALID_DEFAULT="Y"
   fi
   
-  local PROMPT_TEXT="$PROMPT [$([[ $VALID_DEFAULT == Y ]] && echo "Y/n" || echo "y/N")]: "
+  local PROMPT_TEXT="$PROMPT [$([[ $VALID_DEFAULT == Y ]] && echo_yellow "Y/n" || echo_yellow "y/N")]: "
   
   while true; do
     read_from_terminal -rp "$PROMPT_TEXT" REPLY
     REPLY=${REPLY:-$VALID_DEFAULT}
     case "${REPLY^^}" in
       Y|N) REPLY="${REPLY^^}"; break ;;
-      *) echo -e "${YELLOW}Please enter Y or N.${RESET}" ;;
+      *) echo_yellow "Please enter Y or N." ;;
     esac
   done
 }
@@ -250,7 +250,7 @@ prompt_for_port() {
       PORT_REPLY="$PORT_VALUE"
       break
     else
-      echo -e "${YELLOW}Invalid port. Please enter a number between 1-65535.${RESET}"
+      echo_yellow "Invalid port. Please enter a number between 1-65535."
     fi
   done
 }
@@ -261,11 +261,13 @@ prompt_for_port() {
 #   print_script_header
 print_script_header() {
   if [[ -n "${SCRIPT_NAME:-}" ]]; then
-    echo -e "\n${BLUE}Running script: ${SCRIPT_NAME}${RESET}"
+    echo_newline
+    echo_blue "Running script: ${SCRIPT_NAME}"
   fi
 
   if [[ -n "${SCRIPT_DESC:-}" ]]; then
-    echo -e "${BLUE}Description: ${SCRIPT_DESC}${RESET}\n"
+    echo_blue "Description: ${SCRIPT_DESC}"
+    echo_newline
   fi
 }
 
@@ -376,18 +378,18 @@ execute_run_sh() {
   [[ "$BASE_DIR" == "$PWD"* ]] && REL_BASE_DIR=".${BASE_DIR#$PWD}"
   [[ "$SCRIPT_PATH" == "$PWD"* ]] && REL_SCRIPT_PATH=".${SCRIPT_PATH#$PWD}"
 
-  echo -e "${YELLOW}Searching for 'run.sh' files in $REL_BASE_DIR (excluding $REL_SCRIPT_PATH)...${RESET}\n"
-
+  echo_yellow "Searching for 'run.sh' files in $REL_BASE_DIR (excluding $REL_SCRIPT_PATH)..."
+  echo_newline
   RUN_FILES=$(find "$BASE_DIR" -type f -name "run.sh" ! -path "$SCRIPT_PATH" | sort)
   if [[ -z "$RUN_FILES" ]]; then
-    echo -e "${RED}No run.sh files found.${RESET}"
+    echo_red "No run.sh files found."
     return
   fi
 
-  echo -e "${BLUE}Found the following run.sh files:${RESET}\n"
+  echo_blue "Found the following run.sh files:"
   while IFS= read -r file; do
     REL_PATH="${file#$BASE_DIR/}"
-    echo -e "${YELLOW}- $REL_PATH${RESET}"
+    echo_yellow "  - $REL_PATH"
   done <<< "$RUN_FILES"
   echo_newline
 
@@ -395,21 +397,21 @@ execute_run_sh() {
     REL_PATH="${file#$BASE_DIR/}"
     prompt_yes_no "Do you want to execute '$REL_PATH'?" "Y"
     if [[ "$REPLY" == "Y" ]]; then
-      echo -e "${YELLOW}Executing $REL_PATH ...${RESET}"
+      echo_yellow "Executing $REL_PATH ..."
 
       set +e
       bash "$file"
       local EXIT_CODE=$?
       set -e
       if [[ $EXIT_CODE -ne 0 ]]; then
-        echo -e "${RED}Warning: $REL_PATH exited with status $EXIT_CODE, continuing...${RESET}"
+        echo_yellow "Warning: $REL_PATH exited with status $EXIT_CODE, continuing..."
       fi
     else
-      echo -e "${YELLOW}Skipping $REL_PATH.${RESET}"
+      echo_yellow "Skipping $REL_PATH."
     fi
   done <<< "$RUN_FILES"
 
-  echo -e "${GREEN}All done.${RESET}"
+  echo_green "All done."
 }
 
 # Function to backup a config file if it exists
@@ -421,7 +423,7 @@ backup_config_file() {
   if [[ -f "$TARGET_FILE" ]]; then
     local BACKUP_FILE="${TARGET_FILE}.backup-$(date +%Y%m%d-%H%M%S)"
     cp "$TARGET_FILE" "$BACKUP_FILE"
-    echo -e "${GREEN}Backup created at: $BACKUP_FILE${RESET}"
+    echo_green "Backup created at: $BACKUP_FILE"
   fi
 }
 
@@ -437,17 +439,17 @@ validate_and_cleanup() {
 
   if [[ -n "$VALIDATE_CMD" ]]; then
     if ! $VALIDATE_CMD "$TEMP_FILE"; then
-      echo -e "${RED}[ERROR] Validation failed for $TEMP_FILE. Not applying config.${RESET}"
+      echo_red "[ERROR] Validation failed for $TEMP_FILE. Not applying config."
       rm -f "$TEMP_FILE"
       exit 1
     fi
-    echo -e "${GREEN}Config validated successfully.${RESET}"
+    echo_green "Config validated successfully."
   fi
 
   cp "$TEMP_FILE" "$TARGET_FILE"
   chmod "$PERMS" "$TARGET_FILE"
   rm -f "$TEMP_FILE"
-  echo -e "${GREEN}Applied new config: $TARGET_FILE${RESET}"
+  echo_green "Applied new config: $TARGET_FILE"
 }
 
 # Function to ensure a directory exists with proper permissions
@@ -581,12 +583,12 @@ render_template_config() {
 # Exits with error message if Docker is not installed
 ensure_docker() {
   if ! does_cmd_exist "docker"; then
-    echo -e "${RED}[ERROR] Docker is not installed. Please run 04-orchestration/00-docker first.${RESET}"
+    echo_red "[ERROR] Docker is not installed. Please run 04-orchestration/00-docker first."
     exit 1
   fi
   
   if ! systemctl is-active --quiet docker; then
-    echo -e "${RED}[ERROR] Docker service is not running. Please start Docker service.${RESET}"
+    echo_red "[ERROR] Docker service is not running. Please start Docker service."
     exit 1
   fi
   

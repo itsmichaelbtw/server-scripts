@@ -24,7 +24,7 @@ while true; do
   if [[ "$BAN_TIME" =~ ^[0-9]+$ ]]; then
     break
   else
-    echo "Ban time must be an integer."
+    echo_yellow "Ban time must be an integer."
   fi
 done
 
@@ -35,7 +35,7 @@ while true; do
   if [[ "$FIND_TIME" =~ ^[0-9]+$ ]]; then
     break
   else
-    echo "Find time must be an integer."
+    echo_yellow "Find time must be an integer."
   fi
 done
 
@@ -46,7 +46,7 @@ while true; do
   if [[ "$MAX_RETRIES" =~ ^[0-9]+$ ]]; then
     break
   else
-    echo "Max retries must be an integer."
+    echo_yellow "Max retries must be an integer."
   fi
 done
 
