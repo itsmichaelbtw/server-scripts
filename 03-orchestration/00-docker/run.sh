@@ -46,9 +46,12 @@ if [[ -n "$DOCKER_USER" ]]; then
   fi
 fi
 
+echo_yellow "Configuring Docker log rotation..."
+render_template_config "$SCRIPT_DIR/daemon.json" "/etc/docker/daemon.json" 644
+systemctl restart docker
+
 echo_yellow "Enabling and starting Docker service..."
 systemctl enable docker
-systemctl restart docker
 
 echo_yellow "Verifying Docker installation..."
 docker --version
