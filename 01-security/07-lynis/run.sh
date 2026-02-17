@@ -8,7 +8,7 @@ SCRIPT_DIR=$(dirname "$(realpath "$0")")
 ROOT_DIR=$(realpath "$SCRIPT_DIR/../..")
 source "$ROOT_DIR/common.sh"
 
-SCRIPT_NAME="08-lynis"
+SCRIPT_NAME="07-lynis"
 SCRIPT_DESC="Install Lynis, run an initial security audit, and optionally schedule via CRON."
 
 print_script_header

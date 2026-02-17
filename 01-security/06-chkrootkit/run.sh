@@ -8,7 +8,7 @@ SCRIPT_DIR=$(dirname "$(realpath "$0")")
 ROOT_DIR=$(realpath "$SCRIPT_DIR/../..")
 source "$ROOT_DIR/common.sh"
 
-SCRIPT_NAME="07-chkrootkit"
+SCRIPT_NAME="06-chkrootkit"
 SCRIPT_DESC="Install Chkrootkit, run initial rootkit scan, and optionally schedule via CRON."
 
 print_script_header

@@ -8,7 +8,7 @@ SCRIPT_DIR=$(dirname "$(realpath "$0")")
 ROOT_DIR=$(realpath "$SCRIPT_DIR/../..")
 source "$ROOT_DIR/common.sh"
 
-SCRIPT_NAME="04-sysctl"
+SCRIPT_NAME="03-sysctl"
 SCRIPT_DESC="Harden kernel/network parameters using sysctl template."
 
 print_script_header

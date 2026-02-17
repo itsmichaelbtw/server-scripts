@@ -8,7 +8,7 @@ SCRIPT_DIR=$(dirname "$(realpath "$0")")
 ROOT_DIR=$(realpath "$SCRIPT_DIR/../..")
 source "$ROOT_DIR/common.sh"
 
-SCRIPT_NAME="06-rkhunter"
+SCRIPT_NAME="05-rkhunter"
 SCRIPT_DESC="Install RKHunter, configure it, run initial rootkit scan, and optionally schedule via CRON using the default database."
 
 print_script_header

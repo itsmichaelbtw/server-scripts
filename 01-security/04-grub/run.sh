@@ -8,7 +8,7 @@ SCRIPT_DIR=$(dirname "$(realpath "$0")")
 ROOT_DIR=$(realpath "$SCRIPT_DIR/../..")
 source "$ROOT_DIR/common.sh"
 
-SCRIPT_NAME="05-grub"
+SCRIPT_NAME="04-grub"
 SCRIPT_DESC="Harden GRUB bootloader using template configuration."
 
 print_script_header

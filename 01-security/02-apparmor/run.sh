@@ -8,7 +8,7 @@ SCRIPT_DIR=$(dirname "$(realpath "$0")")
 ROOT_DIR=$(realpath "$SCRIPT_DIR/../..")
 source "$ROOT_DIR/common.sh"
 
-SCRIPT_NAME="03-apparmor"
+SCRIPT_NAME="02-apparmor"
 SCRIPT_DESC="Install and enable AppArmor for mandatory access control."
 
 print_script_header
