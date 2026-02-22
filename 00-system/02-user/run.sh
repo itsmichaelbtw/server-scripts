@@ -49,11 +49,23 @@ fi
 echo_yellow "Step 2: Setting password..."
 prompt_yes_no "Do you want to set a password for '${USER_NAME}'?" "Y"
 if [[ "$REPLY" == "Y" ]]; then
-  if passwd "$USER_NAME"; then
-    echo_green "Password set for '${USER_NAME}'."
-  else
-    echo_red "[ERROR] Failed to set password for '${USER_NAME}'."
-  fi
+  while true; do
+    read_from_terminal -rsp "Enter password for '${USER_NAME}': " PASSWORD
+    echo_newline
+    read_from_terminal -rsp "Retype password: " PASSWORD_CONFIRM
+    echo_newline
+    
+    if [[ "$PASSWORD" == "$PASSWORD_CONFIRM" ]]; then
+      if echo "${USER_NAME}:${PASSWORD}" | chpasswd 2>/dev/null; then
+        echo_green "Password set for '${USER_NAME}'."
+      else
+        echo_red "[ERROR] Failed to set password for '${USER_NAME}'. Please ensure the user exists."
+      fi
+      break
+    else
+      echo_red "[ERROR] Passwords do not match. Please try again."
+    fi
+  done
 else
   echo_yellow "Skipping password setup for '${USER_NAME}'."
 fi
