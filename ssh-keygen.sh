@@ -101,21 +101,16 @@ add_public_key_to_remote() {
   local AUTH_USER="$2"
   local PUBKEY_CONTENT="$3"
   
-  local SSH_CMD
   local SSH_OPTS="-o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$(eval echo \"~${ACTUAL_USER}/.ssh/known_hosts\")"
   
   if [[ "$AUTH_USER" == "$TARGET_USER" ]]; then
-    SSH_CMD="mkdir -p ~/.ssh && echo '$PUBKEY_CONTENT' | tee -a ~/.ssh/authorized_keys > /dev/null && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"
+    if ssh $SSH_OPTS -p "$REMOTE_PORT" "$AUTH_USER@$SERVER_HOST" "mkdir -p ~/.ssh && echo '$PUBKEY_CONTENT' >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys" 2>&1; then
+      return 0
+    fi
   else
-    SSH_CMD="sudo -u $TARGET_USER sh -c 'mkdir -p ~/.ssh && echo '\"'\"'$PUBKEY_CONTENT'\"'\"' | tee -a ~/.ssh/authorized_keys > /dev/null && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys'"
-  fi
-  
-  if ssh $SSH_OPTS -p "$REMOTE_PORT" "$AUTH_USER@$SERVER_HOST" "$SSH_CMD" 2>&1; then
-    return 0
-  fi
-  
-  if ssh $SSH_OPTS -o PubkeyAuthentication=no -p "$REMOTE_PORT" "$AUTH_USER@$SERVER_HOST" "$SSH_CMD" 2>&1; then
-    return 0
+    if ssh $SSH_OPTS -p "$REMOTE_PORT" "$AUTH_USER@$SERVER_HOST" "echo '$PUBKEY_CONTENT' | sudo -u $TARGET_USER sh -c 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys'" 2>&1; then
+      return 0
+    fi
   fi
   
   return 1
@@ -135,18 +130,26 @@ echo_yellow "Attempting connection (will try public key first, then password).\n
 PUBKEY_CONTENT=$(cat "$PUBLIC_KEY")
 
 if add_public_key_to_remote "$REMOTE_USER" "$AUTH_USER" "$PUBKEY_CONTENT"; then
-  echo_green "Public key added to $REMOTE_USER's authorized_keys"
-else
-  echo_red "[ERROR] Failed to add public key to $REMOTE_USER."
-  echo_yellow "\nYou can add it manually by running:"
-  echo_yellow "  ssh -p $REMOTE_PORT $AUTH_USER@$SERVER_HOST"
-  if [[ "$AUTH_USER" != "$REMOTE_USER" ]]; then
-    echo_yellow "  sudo -u $REMOTE_USER bash -c 'cat >> ~/.ssh/authorized_keys' << 'EOF'"
+  if [[ "$AUTH_USER" == "$REMOTE_USER" ]]; then
+    echo_green "Public key added to $REMOTE_USER's authorized_keys"
   else
-    echo_yellow "  bash -c 'cat >> ~/.ssh/authorized_keys' << 'EOF'"
+    echo_green "Public key added to $REMOTE_USER's authorized_keys via $AUTH_USER account"
+    echo_yellow "\nNote: You authenticated with '$AUTH_USER', and used sudo to add the key to $REMOTE_USER's account."
   fi
-  echo_yellow "  $PUBKEY_CONTENT"
-  echo_yellow "  EOF"
+else
+  echo_red "[ERROR] Failed to add public key to server."
+  echo_yellow "\nYou can add it manually by running:"
+  if [[ "$AUTH_USER" == "$REMOTE_USER" ]]; then
+    echo_yellow "  ssh -p $REMOTE_PORT $AUTH_USER@$SERVER_HOST"
+    echo_yellow "  mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys << 'EOF'"
+    echo_yellow "  $PUBKEY_CONTENT"
+    echo_yellow "  EOF"
+  else
+    echo_yellow "  ssh -p $REMOTE_PORT $AUTH_USER@$SERVER_HOST"
+    echo_yellow "  cat << 'EOF' | sudo -u $REMOTE_USER sh -c 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys'"
+    echo_yellow "  $PUBKEY_CONTENT"
+    echo_yellow "  EOF"
+  fi
   exit 1
 fi
 
