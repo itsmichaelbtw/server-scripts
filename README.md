@@ -5,8 +5,9 @@ Bash automation toolkit for Ubuntu server provisioning, hardening, and managemen
 ## Table of Contents
 
 - [Overview](#overview)
-- [Usage](#usage)
 - [Installation](#installation)
+- [Usage](#usage)
+- [Ports](#ports)
 - [Scripts](#scripts)
 - [Utilities](#utilities)
 - [Troubleshooting](#troubleshooting)
@@ -50,13 +51,13 @@ nano .env
 The `.env` file should contain:
 
 ```bash
-COPY_SERVER_IP=192.168.1.100
-COPY_SSH_USER=root
-COPY_SSH_PORT=22
-COPY_REMOTE_DIR='~/server-scripts'
+SERVER_IP=192.168.1.100
+SSH_USER=root
+SSH_PORT=22
+REMOTE_DIR='~/server-scripts'
 ```
 
-When you run `./copy.sh`, it will load these defaults and show them in the prompts. You can still override them interactively. **Important:** Keep `.env` out of version control by never committing it (it's in `.gitignore`).
+When you run `./copy.sh`, it will load these defaults and show them in the prompts. You can still override them interactively if needed.
 
 **Example execution order:**
 ```bash
@@ -67,6 +68,28 @@ sudo ./03-orchestration/run.sh   # Container setup
 sudo ./04-monitoring/run.sh      # Monitoring tools
 sudo ./05-gui/run.sh             # Web dashboards
 ```
+
+## Ports
+
+The table below lists ports used by the scripts and which service or script configures them.
+
+| Port | Service / Script |
+|------:|-----------------|
+| 80 | HTTP / web dashboards (firewall prompts; used for some GUI containers) |
+| 443 | HTTPS (firewall prompts in `01-security/00-firewall/run.sh`) |
+| 19999 | Netdata (`05-gui/00-netdata/run.sh`) |
+| 3000 | Grafana (`05-gui/05-grafana/run.sh`) |
+| 3025 | Prometheus (`04-monitoring/03-prometheus/run.sh`) |
+| 3050 | Loki (`04-monitoring/04-loki/run.sh`) |
+| 3075 | Alertmanager (`04-monitoring/05-alertmanager/run.sh`) |
+| 3100 | Grafana Alloy / log forwarder (`04-monitoring/06-alloy/run.sh`) |
+| 4025 | FileBrowser (`05-gui/01-filebrowser/run.sh`) |
+| 4050 | Crontab-UI (`05-gui/02-crontab-ui/run.sh`) |
+| 4075 | Gatus (`05-gui/03-gatus/run.sh`) |
+| 4100 | Vaultwarden (`05-gui/04-vaultwarden/run.sh`) |
+| 51820/udp | WireGuard VPN listening port (default prompt in `02-network/00-wireguard/run.sh`) |
+| 51893/tcp | Alloy auxiliary port (`04-monitoring/06-alloy/run.sh`) |
+| 51898/udp | Alloy auxiliary port (`04-monitoring/06-alloy/run.sh`) |
 
 ## Installation
 
@@ -83,6 +106,12 @@ All scripts are executable by default. If needed, run:
 ./executable.sh  # Makes all run.sh files executable
 ```
 
+If the target server does not have `git` installed, you can transfer the repository using the interactive `copy.sh` script instead of cloning:
+
+```bash
+./copy.sh
+```
+
 ## Scripts
 
 | Category | Description | Docs |
@@ -96,8 +125,9 @@ All scripts are executable by default. If needed, run:
 
 ## Utilities
 
-- **executable.sh** - Make all scripts executable
+- **executable.sh** - Make all run.sh files executable
 - **copy.sh** - Copy scripts to a remote server
+- **ssh-keygen.sh** - Generate SSH keypair, copy to server and update local SSH config
 
 ## Troubleshooting
 
@@ -125,6 +155,10 @@ Ensure selected ports don't conflict with existing services:
 ```bash
 sudo netstat -tlnp | grep LISTEN
 ```
+
+
+
+
 
 ## License
 
