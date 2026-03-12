@@ -32,6 +32,8 @@ docker run -d \
   --restart=unless-stopped \
   -p "$CONTAINER_PORT:3000" \
   -v grafana-storage:/var/lib/grafana \
+  -e GF_AUTH_ANONYMOUS_ENABLED=true \
+  -e GF_AUTH_ANONYMOUS_ORG_ROLE=Admin \
   -e GF_SECURITY_ADMIN_USER=admin \
   -e GF_SECURITY_ADMIN_PASSWORD=admin \
   -e GF_PLUGINS_PREINSTALL=grafana-clock-panel,grafana-worldmap-panel \
