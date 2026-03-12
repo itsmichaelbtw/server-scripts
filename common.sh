@@ -698,3 +698,9 @@ echo_deploying_container() {
   
   echo_yellow "Deploying $CONTAINER_NAME container on port $PORT..."
 }
+
+# Auto-load ports.conf if present at the repo root.
+# ROOT_DIR is always set by each script before sourcing common.sh.
+if [[ -n "${ROOT_DIR:-}" ]] && [[ -f "$ROOT_DIR/ports.conf" ]]; then
+  source "$ROOT_DIR/ports.conf"
+fi
