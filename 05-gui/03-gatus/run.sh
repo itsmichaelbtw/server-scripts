@@ -9,7 +9,7 @@ SCRIPT_NAME="03-gatus"
 SCRIPT_DESC="Deploy Gatus status page and health check dashboard via Docker."
 
 CONTAINER_NAME=gatus
-CONTAINER_PORT=4075
+CONTAINER_PORT="${GATUS_PORT:-4075}"
 CONFIG_DIR="/etc/gatus"
 CONFIG_FILE="$CONFIG_DIR/config.yaml"
 TEMPLATE_FILE="$SCRIPT_DIR/config.yaml"

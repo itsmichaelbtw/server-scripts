@@ -9,7 +9,7 @@ SCRIPT_NAME="03-prometheus"
 SCRIPT_DESC="Deploy Prometheus metrics collection and time-series database."
 
 CONTAINER_NAME=prometheus
-CONTAINER_PORT=3025
+CONTAINER_PORT="${PROMETHEUS_PORT:-3025}"
 TEMPLATE_FILE="$SCRIPT_DIR/prometheus.yml"
 CONFIG_DIR="/etc/prometheus"
 CONFIG_FILE="$CONFIG_DIR/prometheus.yml"

@@ -10,7 +10,7 @@ SCRIPT_NAME="05-grafana"
 SCRIPT_DESC="Deploy Grafana dashboards and visualization platform."
 
 CONTAINER_NAME=grafana
-CONTAINER_PORT=3000
+CONTAINER_PORT="${GRAFANA_PORT:-3000}"
 GRAFANA_DATA_DIR="${1:-/var/lib/grafana}"
 GRAFANA_VERSION="latest"
 

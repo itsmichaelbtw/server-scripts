@@ -9,7 +9,7 @@ SCRIPT_NAME="02-crontab-ui"
 SCRIPT_DESC="Deploy Crontab-UI for GUI management of cron jobs via Docker."
 
 CONTAINER_NAME=crontab-ui
-CONTAINER_PORT=4050
+CONTAINER_PORT="${CRONTAB_UI_PORT:-4050}"
 CRON_SYSTEM_DIR="/var/spool/cron/crontabs"
 
 print_script_header
