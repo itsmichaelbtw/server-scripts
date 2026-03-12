@@ -9,7 +9,8 @@ SCRIPT_NAME="06-alloy"
 SCRIPT_DESC="Deploy Grafana Alloy to forward system logs to Loki."
 
 CONTAINER_NAME=alloy
-CONTAINER_PORT="${ALLOY_PORT:-3100}"
+require_env "ALLOY_PORT"
+CONTAINER_PORT="$ALLOY_PORT"
 CONFIG_DIR="/etc/alloy"
 CONFIG_FILE="$CONFIG_DIR/config.alloy"
 TEMPLATE_FILE="$SCRIPT_DIR/config.alloy"

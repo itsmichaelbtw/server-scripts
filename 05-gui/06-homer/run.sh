@@ -9,7 +9,8 @@ SCRIPT_NAME="06-homer"
 SCRIPT_DESC="Deploy Homer dashboard via Docker with template-based configuration."
 
 CONTAINER_NAME=homer
-CONTAINER_PORT="${HOMER_PORT:-80}"
+require_env "HOMER_PORT"
+CONTAINER_PORT="$HOMER_PORT"
 DATA_DIR="/opt/homer"
 ASSETS_DIR="$DATA_DIR/assets"
 TEMPLATE_FILE="$SCRIPT_DIR/config.yml"
@@ -35,17 +36,27 @@ echo_yellow "Preparing Homer assets directory..."
 mkdir -p "$ASSETS_DIR"
 chmod 755 "$ASSETS_DIR"
 
+require_env "PROMETHEUS_PORT"
+require_env "LOKI_PORT"
+require_env "ALERTMANAGER_PORT"
+require_env "NETDATA_PORT"
+require_env "FILEBROWSER_PORT"
+require_env "CRONTAB_UI_PORT"
+require_env "GATUS_PORT"
+require_env "VAULTWARDEN_PORT"
+require_env "GRAFANA_PORT"
+
 render_template_config "$TEMPLATE_FILE" "$CONFIG_FILE" 644 \
   -e "s|{{WG_IP}}|$WG_IP|g" \
-  -e "s|{{PROMETHEUS_PORT}}|${PROMETHEUS_PORT:-3025}|g" \
-  -e "s|{{LOKI_PORT}}|${LOKI_PORT:-3050}|g" \
-  -e "s|{{ALERTMANAGER_PORT}}|${ALERTMANAGER_PORT:-3075}|g" \
-  -e "s|{{NETDATA_PORT}}|${NETDATA_PORT:-19999}|g" \
-  -e "s|{{FILEBROWSER_PORT}}|${FILEBROWSER_PORT:-4025}|g" \
-  -e "s|{{CRONTAB_UI_PORT}}|${CRONTAB_UI_PORT:-4050}|g" \
-  -e "s|{{GATUS_PORT}}|${GATUS_PORT:-4075}|g" \
-  -e "s|{{VAULTWARDEN_PORT}}|${VAULTWARDEN_PORT:-4100}|g" \
-  -e "s|{{GRAFANA_PORT}}|${GRAFANA_PORT:-3000}|g"
+  -e "s|{{PROMETHEUS_PORT}}|$PROMETHEUS_PORT|g" \
+  -e "s|{{LOKI_PORT}}|$LOKI_PORT|g" \
+  -e "s|{{ALERTMANAGER_PORT}}|$ALERTMANAGER_PORT|g" \
+  -e "s|{{NETDATA_PORT}}|$NETDATA_PORT|g" \
+  -e "s|{{FILEBROWSER_PORT}}|$FILEBROWSER_PORT|g" \
+  -e "s|{{CRONTAB_UI_PORT}}|$CRONTAB_UI_PORT|g" \
+  -e "s|{{GATUS_PORT}}|$GATUS_PORT|g" \
+  -e "s|{{VAULTWARDEN_PORT}}|$VAULTWARDEN_PORT|g" \
+  -e "s|{{GRAFANA_PORT}}|$GRAFANA_PORT|g"
 
 docker run -d \
   --name="$CONTAINER_NAME" \

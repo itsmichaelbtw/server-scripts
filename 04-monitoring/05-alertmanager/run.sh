@@ -9,7 +9,8 @@ SCRIPT_NAME="05-alertmanager"
 SCRIPT_DESC="Deploy AlertManager for alert routing and notification delivery."
 
 CONTAINER_NAME=alertmanager
-CONTAINER_PORT="${ALERTMANAGER_PORT:-3075}"
+require_env "ALERTMANAGER_PORT"
+CONTAINER_PORT="$ALERTMANAGER_PORT"
 TEMPLATE_FILE="$SCRIPT_DIR/alertmanager.yml"
 CONFIG_DIR="/etc/alertmanager"
 CONFIG_FILE="$CONFIG_DIR/alertmanager.yml"

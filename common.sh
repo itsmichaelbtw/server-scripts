@@ -699,6 +699,23 @@ echo_deploying_container() {
   echo_yellow "Deploying $CONTAINER_NAME container on port $PORT..."
 }
 
+# Function to assert a required environment variable is set and non-empty
+# Usage: require_env "VAR_NAME"
+# Example:
+#   require_env "PROMETHEUS_PORT"
+# Notes:
+#   - Exits with an error if the variable is unset or empty
+#   - Intended to validate values loaded from ports.conf or other config files
+require_env() {
+  local VAR_NAME="$1"
+  local VALUE="${!VAR_NAME:-}"
+  if [[ -z "$VALUE" ]]; then
+    echo_red "[ERROR] Required variable '$VAR_NAME' is not set."
+    echo_yellow "Ensure ports.conf exists at the repository root and defines '$VAR_NAME'."
+    exit 1
+  fi
+}
+
 # Auto-load ports.conf if present at the repo root.
 # ROOT_DIR is always set by each script before sourcing common.sh.
 if [[ -n "${ROOT_DIR:-}" ]] && [[ -f "$ROOT_DIR/ports.conf" ]]; then

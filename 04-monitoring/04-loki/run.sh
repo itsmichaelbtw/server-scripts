@@ -10,7 +10,8 @@ SCRIPT_NAME="04-loki"
 SCRIPT_DESC="Deploy Loki log aggregation and indexing."
 
 CONTAINER_NAME=loki
-CONTAINER_PORT="${LOKI_PORT:-3050}"
+require_env "LOKI_PORT"
+CONTAINER_PORT="$LOKI_PORT"
 LOKI_CONFIG="/etc/loki/loki-config.yaml"
 LOKI_DATA_DIR="/var/lib/loki"
 LOKI_VERSION="3.6.2"

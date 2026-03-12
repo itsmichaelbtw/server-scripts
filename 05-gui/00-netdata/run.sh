@@ -9,7 +9,8 @@ SCRIPT_NAME="00-netdata"
 SCRIPT_DESC="Deploy NetData real-time monitoring via Docker."
 
 CONTAINER_NAME=netdata
-CONTAINER_PORT="${NETDATA_PORT:-19999}"
+require_env "NETDATA_PORT"
+CONTAINER_PORT="$NETDATA_PORT"
 
 print_script_header
 validate_environment

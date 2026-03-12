@@ -10,7 +10,8 @@ SCRIPT_NAME="04-vaultwarden"
 SCRIPT_DESC="Deploy Vaultwarden self-hosted password manager via Docker."
 
 CONTAINER_NAME=vaultwarden
-CONTAINER_PORT="${VAULTWARDEN_PORT:-4100}"
+require_env "VAULTWARDEN_PORT"
+CONTAINER_PORT="$VAULTWARDEN_PORT"
 VAULTWARDEN_DATA_DIR="${1:-/vw-data}"
 ADMIN_TOKEN=$(openssl rand -base64 32)
 
