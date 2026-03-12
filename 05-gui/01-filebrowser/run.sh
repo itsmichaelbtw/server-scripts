@@ -32,8 +32,9 @@ docker run -d \
   -v "$FILE_DIR:/srv" \
   -v /var/log:/srv/log:ro \
   -v filebrowser_config:/config \
-  -e PUID=$(id -u) \
-  -e PGID=$(id -g) \
+  --user 0:0 \
+  -e PUID=0 \
+  -e PGID=0 \
   filebrowser/filebrowser \
   --root /srv \
   --noauth
@@ -50,4 +51,3 @@ else
   exit 1
 fi
 
-# I dont have permissions for some log files
