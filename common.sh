@@ -47,7 +47,7 @@ echo_blue() {
 # Function to print text in red
 # Usage: echo_red "Error message"
 # Example:
-#   echo_red "[ERROR] Something failed"
+#   echo_red "Something failed"
 echo_red() {
   echo -e "${RED}✗ $*${RESET}"
 }
@@ -84,7 +84,7 @@ is_ubuntu() {
 # Exits with error message if not run as root
 ensure_root() {
   if [[ "$EUID" -ne 0 ]]; then
-    echo_red "[ERROR] This script must be run as root."
+    echo_red "This script must be run as root."
     echo_yellow "Try: sudo $0"
     exit 1
   fi
@@ -97,7 +97,7 @@ ensure_root() {
 # Exits with error message if not running on Ubuntu
 ensure_ubuntu() {
   if ! is_ubuntu; then
-    echo_red "[ERROR] This script is intended for Ubuntu systems only."
+    echo_red "This script is intended for Ubuntu systems only."
     exit 1
   fi
 }
@@ -162,11 +162,11 @@ require_cmd() {
   if command -v apt-get &>/dev/null; then
     apt-get update -qq
     apt-get install -y "$PKG_NAME" >/dev/null 2>&1 || {
-      echo_red "[ERROR] Failed to install $PKG_NAME via apt-get"
+      echo_red "Failed to install $PKG_NAME via apt-get"
       return 1
     }
   else
-    echo_red "[ERROR] No package manager found (apt-get, yum, or brew). Please install $PKG_NAME manually."
+    echo_red "No package manager found (apt-get, yum, or brew). Please install $PKG_NAME manually."
     return 1
   fi
   
@@ -174,7 +174,7 @@ require_cmd() {
     echo_green "$CMD_NAME installed successfully"
     return 0
   else
-    echo_red "[ERROR] $CMD_NAME installation verification failed"
+    echo_red "$CMD_NAME installation verification failed"
     return 1
   fi
 }
@@ -342,11 +342,11 @@ setup_cron_job() {
         echo_green "  Command: $CRON_CMD"
         CRON_SETUP_SUCCESS=true
       else
-        echo_red "[ERROR] Failed to verify job was added to cron."
+        echo_red "Failed to verify job was added to cron."
         CRON_SETUP_SUCCESS=false
       fi
     else
-      echo_red "[ERROR] Failed to write cron job file."
+      echo_red "Failed to write cron job file."
       if [[ -s "$ERROR_OUTPUT" ]]; then
         echo_red "Error details:"
         cat "$ERROR_OUTPUT" | sed "s/^/  /"
@@ -439,7 +439,7 @@ validate_and_cleanup() {
 
   if [[ -n "$VALIDATE_CMD" ]]; then
     if ! $VALIDATE_CMD "$TEMP_FILE"; then
-      echo_red "[ERROR] Validation failed for $TEMP_FILE. Not applying config."
+      echo_red "Validation failed for $TEMP_FILE. Not applying config."
       rm -f "$TEMP_FILE"
       exit 1
     fi
@@ -611,12 +611,12 @@ render_template_config() {
 # Exits with error message if Docker is not installed
 ensure_docker() {
   if ! does_cmd_exist "docker"; then
-    echo_red "[ERROR] Docker is not installed. Please run 04-orchestration/00-docker first."
+    echo_red "Docker is not installed. Please run 04-orchestration/00-docker first."
     exit 1
   fi
   
   if ! systemctl is-active --quiet docker; then
-    echo_red "[ERROR] Docker service is not running. Please start Docker service."
+    echo_red "Docker service is not running. Please start Docker service."
     exit 1
   fi
   
@@ -634,7 +634,7 @@ ensure_docker() {
 #   - Silently succeeds if network already exists
 ensure_docker_network() {
   if [[ -z "$DOCKER_NETWORK_NAME" ]]; then
-    echo_red "[ERROR] DOCKER_NETWORK_NAME is not set"
+    echo_red "DOCKER_NETWORK_NAME is not set"
     return 1
   fi
   
@@ -705,13 +705,11 @@ echo_deploying_container() {
 #   require_env "PROMETHEUS_PORT"
 # Notes:
 #   - Exits with an error if the variable is unset or empty
-#   - Intended to validate values loaded from ports.conf or other config files
 require_env() {
   local VAR_NAME="$1"
   local VALUE="${!VAR_NAME:-}"
   if [[ -z "$VALUE" ]]; then
-    echo_red "[ERROR] Required variable '$VAR_NAME' is not set."
-    echo_yellow "Ensure ports.conf exists at the repository root and defines '$VAR_NAME'."
+    echo_red "Required variable '$VAR_NAME' is not set."
     exit 1
   fi
 }
