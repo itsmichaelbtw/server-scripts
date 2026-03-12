@@ -49,7 +49,7 @@ echo_yellow "Restarting SSH service..."
 if systemctl restart ssh; then
   echo_green "SSH restarted successfully."
 else
-  echo_red "[ERROR] SSH restart failed. Please restore the previous backup manually if needed."
+  echo_red "SSH restart failed. Please restore the previous backup manually if needed."
   exit 1
 fi
 

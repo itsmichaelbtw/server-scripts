@@ -18,7 +18,7 @@ load_env "$SCRIPT_DIR"
 read_from_terminal -rp "Enter remote server IP address${SERVER_IP:+ [${SERVER_IP}]}: " INPUT_SERVER_IP
 SERVER_IP="${INPUT_SERVER_IP:-${SERVER_IP}}"
 if [[ -z "$SERVER_IP" ]]; then
-  echo_red "[ERROR] IP address cannot be empty."
+  echo_red "IP address cannot be empty."
   exit 1
 fi
 
@@ -39,7 +39,7 @@ REMOTE_DIR="${REMOTE_DIR%/}"
 SOURCE_DIR="$SCRIPT_DIR"
 
 if [[ ! -d "$SOURCE_DIR" ]] || [[ -z "$(ls -A "$SOURCE_DIR")" ]]; then
-  echo_red "[ERROR] Source directory is empty or does not exist."
+  echo_red "Source directory is empty or does not exist."
   exit 1
 fi
 
@@ -84,7 +84,7 @@ rm transfer.tar.gz
 
 TRANSFER_EXIT_STATUS=$?
 if [[ $TRANSFER_EXIT_STATUS -ne 0 ]]; then
-  echo_red "[ERROR] File transfer failed with exit status $TRANSFER_EXIT_STATUS"
+  echo_red "File transfer failed with exit status $TRANSFER_EXIT_STATUS"
   exit 1
 fi
 

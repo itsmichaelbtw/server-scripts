@@ -24,7 +24,7 @@ echo_yellow "  3. Add/update an entry in your local SSH config\n"
 read_from_terminal -rp "Enter server hostname or IP${SERVER_IP:+ [${SERVER_IP}]}: " INPUT_SERVER_HOST
 SERVER_HOST="${INPUT_SERVER_HOST:-${SERVER_IP}}"
 if [[ -z "$SERVER_HOST" ]]; then
-  echo_red "[ERROR] Server hostname/IP cannot be empty."
+  echo_red "Server hostname/IP cannot be empty."
   exit 1
 fi
 
@@ -34,7 +34,7 @@ KEY_NAME="${KEY_NAME:-id_rsa}"
 read_from_terminal -rp "Enter remote server username to add SSH key to${SSH_USER:+ [${SSH_USER}]}: " INPUT_REMOTE_USER
 REMOTE_USER="${INPUT_REMOTE_USER:-${SSH_USER}}"
 if [[ -z "$REMOTE_USER" ]]; then
-  echo_red "[ERROR] Remote username cannot be empty."
+  echo_red "Remote username cannot be empty."
   exit 1
 fi
 
@@ -81,7 +81,7 @@ if [[ ! -f "$PRIVATE_KEY" ]]; then
     echo_green "  Private key: $PRIVATE_KEY"
     echo_green "  Public key: $PUBLIC_KEY"
   else
-    echo_red "[ERROR] Failed to generate SSH key."
+    echo_red "Failed to generate SSH key."
     exit 1
   fi
 else
@@ -100,19 +100,20 @@ add_public_key_to_remote() {
   local TARGET_USER="$1"
   local AUTH_USER="$2"
   local PUBKEY_CONTENT="$3"
-  
-  local SSH_OPTS="-o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$(eval echo \"~${ACTUAL_USER}/.ssh/known_hosts\")"
-  
+  local SUDO_PASS="${4:-}"
+
+  local SSH_OPTS="-o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$(eval echo \"~${ACTUAL_USER}/.ssh/known_hosts\") -o BatchMode=no"
+
   if [[ "$AUTH_USER" == "$TARGET_USER" ]]; then
     if ssh $SSH_OPTS -p "$REMOTE_PORT" "$AUTH_USER@$SERVER_HOST" "mkdir -p ~/.ssh && echo '$PUBKEY_CONTENT' >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys" 2>&1; then
       return 0
     fi
   else
-    if ssh $SSH_OPTS -p "$REMOTE_PORT" "$AUTH_USER@$SERVER_HOST" "echo '$PUBKEY_CONTENT' | sudo -u $TARGET_USER sh -c 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys'" 2>&1; then
+    if ssh $SSH_OPTS -p "$REMOTE_PORT" "$AUTH_USER@$SERVER_HOST" "echo '$SUDO_PASS' | sudo -S -H -u $TARGET_USER sh -c 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && echo \"$PUBKEY_CONTENT\" >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys'" 2>&1; then
       return 0
     fi
   fi
-  
+
   return 1
 }
 
@@ -121,15 +122,18 @@ echo_yellow "\nPreparing to copy public key to server..."
 echo_yellow "Clearing old host key entry (if it exists)..."
 ssh-keygen -R "$SERVER_HOST" 2>/dev/null || true
 
-echo_yellow "Accepting new host key..."
-ssh-keyscan -p "$REMOTE_PORT" "$SERVER_HOST" >> "$SSH_DIR/known_hosts" 2>/dev/null || true
-
 echo_yellow "\nCopying public key to server..."
 echo_yellow "Attempting connection (will try public key first, then password).\n"
 
 PUBKEY_CONTENT=$(cat "$PUBLIC_KEY")
+SUDO_PASS=""
+if [[ "$AUTH_USER" != "$REMOTE_USER" ]]; then
+  echo_yellow "Authenticating as '$AUTH_USER' to add key for '$REMOTE_USER' (requires sudo on the server)."
+  read_from_terminal -rsp "Enter sudo password for $AUTH_USER@$SERVER_HOST: " SUDO_PASS
+  echo
+fi
 
-if add_public_key_to_remote "$REMOTE_USER" "$AUTH_USER" "$PUBKEY_CONTENT"; then
+if add_public_key_to_remote "$REMOTE_USER" "$AUTH_USER" "$PUBKEY_CONTENT" "$SUDO_PASS"; then
   if [[ "$AUTH_USER" == "$REMOTE_USER" ]]; then
     echo_green "Public key added to $REMOTE_USER's authorized_keys"
   else
@@ -137,7 +141,7 @@ if add_public_key_to_remote "$REMOTE_USER" "$AUTH_USER" "$PUBKEY_CONTENT"; then
     echo_yellow "\nNote: You authenticated with '$AUTH_USER', and used sudo to add the key to $REMOTE_USER's account."
   fi
 else
-  echo_red "[ERROR] Failed to add public key to server."
+  echo_yellow "Could not copy public key automatically."
   echo_yellow "\nYou can add it manually by running:"
   if [[ "$AUTH_USER" == "$REMOTE_USER" ]]; then
     echo_yellow "  ssh -p $REMOTE_PORT $AUTH_USER@$SERVER_HOST"
@@ -150,7 +154,6 @@ else
     echo_yellow "  $PUBKEY_CONTENT"
     echo_yellow "  EOF"
   fi
-  exit 1
 fi
 
 SSH_CONFIG="$SSH_DIR/config"
@@ -168,13 +171,13 @@ if grep -q "^Host $CONFIG_ALIAS$" "$SSH_CONFIG"; then
   
   if [[ "$REPLY" == "Y" ]]; then
     START_LINE=$(grep -n "^Host $CONFIG_ALIAS$" "$SSH_CONFIG" | cut -d: -f1 | head -1)
-    END_LINE=$((START_LINE + 1))
+    TOTAL_LINES=$(wc -l < "$SSH_CONFIG")
     
-    NEXT_HOST=$(tail -n +$((END_LINE + 1)) "$SSH_CONFIG" | grep -n "^Host " | head -1 | cut -d: -f1)
+    NEXT_HOST=$(tail -n +$((START_LINE + 1)) "$SSH_CONFIG" | grep -n "^Host " | head -1 | cut -d: -f1 || true)
     if [[ -n "$NEXT_HOST" ]]; then
-      END_LINE=$((END_LINE + NEXT_HOST - 1))
+      END_LINE=$((START_LINE + NEXT_HOST - 1))
     else
-      END_LINE=$(wc -l < "$SSH_CONFIG")
+      END_LINE=$TOTAL_LINES
     fi
     
     sed -i '' "${START_LINE},${END_LINE}d" "$SSH_CONFIG"

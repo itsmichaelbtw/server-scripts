@@ -27,7 +27,7 @@ configure_ufw_for_wireguard "$CONTAINER_PORT" tcp
 
 WG_IP=$(get_wireguard_ip)
 if [[ -z "$WG_IP" ]]; then
-  echo_red "[ERROR] WireGuard interface wg0 is not active. Start WireGuard before deploying Homer."
+  echo_red "WireGuard interface wg0 is not active. Start WireGuard before deploying Homer."
   exit 1
 fi
 echo_green "Detected WireGuard IP: $WG_IP"

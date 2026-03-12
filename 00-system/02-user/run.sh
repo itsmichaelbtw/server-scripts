@@ -22,12 +22,12 @@ add_user() {
     read_from_terminal -rp "Enter username to create: " USER_NAME
 
     if [[ -z "$USER_NAME" ]]; then
-      echo_red "[ERROR] Username cannot be empty."
+      echo_red "Username cannot be empty."
       continue
     fi
 
     if [[ "$USER_NAME" =~ [^a-zA-Z0-9._-] ]]; then
-      echo_red "[ERROR] Username contains invalid characters. Allowed: a-z, 0-9, ., _, -"
+      echo_red "Username contains invalid characters. Allowed: a-z, 0-9, ., _, -"
     else
       break
     fi
@@ -63,11 +63,11 @@ add_user() {
         if echo "${USER_NAME}:${PASSWORD}" | chpasswd 2>/dev/null; then
           echo_green "Password set for '${USER_NAME}'."
         else
-          echo_red "[ERROR] Failed to set password for '${USER_NAME}'. Please ensure the user exists."
+          echo_red "Failed to set password for '${USER_NAME}'. Please ensure the user exists."
         fi
         break
       else
-        echo_red "[ERROR] Passwords do not match. Please try again."
+        echo_red "Passwords do not match. Please try again."
       fi
     done
   else
@@ -113,18 +113,18 @@ remove_user() {
   read_from_terminal -rp "Enter username to remove: " USER_NAME
 
   if [[ -z "$USER_NAME" ]]; then
-    echo_red "[ERROR] Username cannot be empty."
+    echo_red "Username cannot be empty."
     return
   fi
 
   if ! id "$USER_NAME" &>/dev/null; then
-    echo_red "[ERROR] User '${USER_NAME}' does not exist."
+    echo_red "User '${USER_NAME}' does not exist."
     return
   fi
 
   USER_UID=$(id -u "$USER_NAME")
   if (( USER_UID < 1000 )); then
-    echo_red "[ERROR] Cannot remove system user '${USER_NAME}' (UID < 1000)."
+    echo_red "Cannot remove system user '${USER_NAME}' (UID < 1000)."
     return
   fi
 

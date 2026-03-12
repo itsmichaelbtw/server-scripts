@@ -67,7 +67,7 @@ if does_cmd_exist "ufw" 2>/dev/null; then
   echo_yellow "Applying UFW-Docker integration fix..."
 
   if [[ ! -f "$TEMPLATE_RULES_FILE" ]]; then
-    echo_red "[ERROR] Template UFW rules file not found at: $TEMPLATE_RULES_FILE"
+    echo_red "Template UFW rules file not found at: $TEMPLATE_RULES_FILE"
     echo_yellow "Skipping UFW-Docker fix. Please ensure after.rules exists in the script directory."
   else
     if ! grep -q "BEGIN UFW AND DOCKER" "$AFTER_RULES_FILE" 2>/dev/null; then

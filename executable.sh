@@ -23,7 +23,7 @@ find "$ROOT_DIR" -type f -name "run.sh" | while read -r FILE; do
 	if chmod +x "$FILE"; then
 		echo_green "Now executable"
 	else
-		echo_red "[ERROR] Failed to chmod: $REL_PATH"
+		echo_red "Failed to chmod: $REL_PATH"
 	fi
 done
 

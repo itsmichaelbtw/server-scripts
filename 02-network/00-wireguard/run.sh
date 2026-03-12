@@ -95,7 +95,7 @@ install_wireguard() {
 
 next_client_ip() {
   local SERVER_ADDR=$(grep -E "^Address\s*=" "$WG_CONF" | awk '{print $3}')
-  [[ -n "$SERVER_ADDR" ]] || { echo_red "[ERROR] No Address found in $WG_CONF"; return 1; }
+  [[ -n "$SERVER_ADDR" ]] || { echo_red "No Address found in $WG_CONF"; return 1; }
   local BASE_IP=$(echo "$SERVER_ADDR" | cut -d'/' -f1)
   local MASK=$(echo "$SERVER_ADDR" | cut -d'/' -f2)
 
@@ -111,7 +111,7 @@ next_client_ip() {
     fi
   done
 
-  echo_red "[ERROR] No available IPs in subnet"
+  echo_red "No available IPs in subnet"
   return 1
 }
 

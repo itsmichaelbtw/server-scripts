@@ -29,7 +29,7 @@ systemctl restart cron
 if systemctl is-active --quiet cron; then
   echo_green "Cron service is running."
 else
-  echo_red "[ERROR] Cron service is not running."
+  echo_red "Cron service is not running."
 fi
 
 echo_green "Script ${SCRIPT_NAME} finished successfully.\n"

@@ -35,7 +35,7 @@ for module in "${MODULES[@]}"; do
   if modprobe "$module" 2>/dev/null; then
     echo_green "Module loaded or already present: $module"
   else
-    echo_red "[ERROR] Failed to load module: $module"
+    echo_red "Failed to load module: $module"
     exit 1
   fi
 
