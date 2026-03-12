@@ -8,6 +8,7 @@ Bash automation toolkit for Ubuntu server provisioning, hardening, and managemen
 - [Installation](#installation)
 - [Usage](#usage)
 - [Ports](#ports)
+- [Grafana](#grafana)
 - [Scripts](#scripts)
 - [Utilities](#utilities)
 - [Troubleshooting](#troubleshooting)
@@ -71,25 +72,116 @@ sudo ./05-gui/run.sh             # Web dashboards
 
 ## Ports
 
-The table below lists ports used by the scripts and which service or script configures them.
+The table below lists the default ports used by each service. All ports can be customised via [`ports.conf`](#customising-ports).
 
 | Port | Service / Script |
 |------:|-----------------|
-| 80 | HTTP / web dashboards (firewall prompts; used for some GUI containers) |
+| 80 | Homer (`05-gui/06-homer/run.sh`) |
 | 443 | HTTPS (firewall prompts in `01-security/00-firewall/run.sh`) |
-| 19999 | Netdata (`05-gui/00-netdata/run.sh`) |
 | 3000 | Grafana (`05-gui/05-grafana/run.sh`) |
 | 3025 | Prometheus (`04-monitoring/03-prometheus/run.sh`) |
 | 3050 | Loki (`04-monitoring/04-loki/run.sh`) |
 | 3075 | Alertmanager (`04-monitoring/05-alertmanager/run.sh`) |
-| 3100 | Grafana Alloy / log forwarder (`04-monitoring/06-alloy/run.sh`) |
+| 3100 | Grafana Alloy (`04-monitoring/06-alloy/run.sh`) |
 | 4025 | FileBrowser (`05-gui/01-filebrowser/run.sh`) |
 | 4050 | Crontab-UI (`05-gui/02-crontab-ui/run.sh`) |
 | 4075 | Gatus (`05-gui/03-gatus/run.sh`) |
 | 4100 | Vaultwarden (`05-gui/04-vaultwarden/run.sh`) |
+| 19999 | Netdata (`05-gui/00-netdata/run.sh`) |
 | 51820/udp | WireGuard VPN listening port (default prompt in `02-network/00-wireguard/run.sh`) |
 | 51893/tcp | Alloy auxiliary port (`04-monitoring/06-alloy/run.sh`) |
 | 51898/udp | Alloy auxiliary port (`04-monitoring/06-alloy/run.sh`) |
+
+### Customising Ports
+
+All service ports are defined in `ports.conf` at the repository root. Edit this file before running a deployment script to use a different host port:
+
+```bash
+# ports.conf
+GRAFANA_PORT=3000
+PROMETHEUS_PORT=3025
+LOKI_PORT=3050
+# ... etc
+```
+
+`ports.conf` is automatically loaded by every script via `common.sh`. Each port variable has a built-in fallback default, so the file is optional — if it is absent, all defaults apply. When you change a port, re-run the relevant deployment script to redeploy the container on the new port. Homer's dashboard links are also regenerated from `ports.conf` on each deploy.
+
+## Grafana
+
+Grafana (`05-gui/05-grafana`) is deployed with anonymous admin access enabled — no login is required when accessed over the VPN. The sections below cover connecting it to the monitoring stack deployed by `04-monitoring`.
+
+### Adding Data Sources
+
+Navigate to **Connections → Data Sources → Add new data source** in Grafana. All services share the same Docker bridge network, so use container names as hostnames.
+
+**Prometheus**
+- Type: `Prometheus`
+- URL: `http://prometheus:9090`
+- Scrape interval: `15s`
+
+**Loki**
+- Type: `Loki`
+- URL: `http://loki:3100`
+
+**Alertmanager**
+- Type: `Alertmanager`
+- URL: `http://alertmanager:9093`
+- Implementation: `Prometheus`
+
+### Alloy — Log & Metrics Collection
+
+Grafana Alloy (`04-monitoring/06-alloy`) is a collector agent that runs alongside your services. It:
+
+- **Collects Docker container logs** — discovers all running containers via the Docker socket and forwards their logs to Loki automatically. Any new container you start is picked up without configuration changes.
+- **Tails system log files** — ships logs from `/var/log/auth.log`, `ufw.log`, `fail2ban.log`, `kern.log`, and others to Loki under named job labels.
+
+Alloy's configuration lives at `/etc/alloy/config.alloy`. To add a new log source, append an entry to the `local.file_match` block and restart the container:
+
+```bash
+docker restart alloy
+```
+
+The Alloy UI is accessible at `http://<server>:3100` and shows the live pipeline graph and debug information.
+
+### Alertmanager — Alert Routing
+
+Alertmanager (`04-monitoring/05-alertmanager`) receives firing alerts from Prometheus and routes them to notification channels. Edit `/etc/alertmanager/alertmanager.yml` to configure receivers:
+
+```yaml
+route:
+  receiver: 'default'
+
+receivers:
+  - name: 'default'
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/...'
+        channel: '#alerts'
+    email_configs:
+      - to: 'you@example.com'
+        from: 'alerts@example.com'
+        smarthost: 'smtp.example.com:587'
+```
+
+After editing, reload Alertmanager without restarting:
+
+```bash
+curl -X POST http://localhost:3075/-/reload
+```
+
+Prometheus is pre-configured to send alerts to Alertmanager. Add alert rules to `/etc/prometheus/` as separate `*.rules.yml` files and reference them in `prometheus.yml` under `rule_files`.
+
+### Importing Dashboards
+
+The Grafana community provides pre-built dashboards at [grafana.com/grafana/dashboards](https://grafana.com/grafana/dashboards). Import them via **Dashboards → Import → Enter dashboard ID**.
+
+Recommended dashboards:
+
+| Dashboard ID | Description |
+|---|---|
+| `1860` | Node Exporter Full (system metrics) |
+| `13639` | Loki logs explorer |
+| `9578` | Docker container metrics |
+| `11074` | Alertmanager overview |
 
 ## Installation
 
