@@ -23,19 +23,19 @@ services:
         logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/prometheus.webp"
         subtitle: "Metrics"
         tag: "monitoring"
-        url: http://10.8.0.1:3025
+        url: http://{{WG_IP}}:3025
         target: "_blank"
       - name: "Loki"
         logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/loki.webp"
         subtitle: "Log aggregation"
         tag: "monitoring"
-        url: http://10.8.0.1:3050/metrics
+        url: http://{{WG_IP}}:3050/metrics
         target: "_blank"
       - name: "Alert Manager"
         logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/alertmanager.webp"
         subtitle: "Alert management"
         tag: "monitoring"
-        url: http://10.8.0.1:3075
+        url: http://{{WG_IP}}:3075
         target: "_blank"
 
   - name: "GUI"
@@ -45,35 +45,35 @@ services:
         logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/netdata.webp"
         subtitle: "System monitoring"
         tag: "gui"
-        url: http://10.8.0.1:19999
+        url: http://{{WG_IP}}:19999/v3/
         target: "_blank"
       - name: "Filebrowser"
         logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/filebrowser.webp"
         subtitle: "File manager"
         tag: "gui"
-        url: http://10.8.0.1:4025
+        url: http://{{WG_IP}}:4025
         target: "_blank"
       - name: "Crontab UI"
         logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/cron-master.webp"
         subtitle: "Cron job manager"
         tag: "gui"
-        url: http://10.8.0.1:4050
+        url: http://{{WG_IP}}:4050
         target: "_blank"
       - name: "Gatus"
         logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/gatus.webp"
         subtitle: "Status page"
         tag: "gui"
-        url: http://10.8.0.1:4075
+        url: http://{{WG_IP}}:4075
         target: "_blank"
       - name: "Vaultwarden"
         logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/vaultwarden-light.webp"
         subtitle: "Password manager"
         tag: "gui"
-        url: http://10.8.0.1:4100
+        url: https://{{WG_IP}}:4100
         target: "_blank"
       - name: "Grafana"
         logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/grafana.webp"
         subtitle: "Dashboards"
         tag: "gui"
-        url: http://10.8.0.1:3000
+        url: http://{{WG_IP}}:3000
         target: "_blank"
