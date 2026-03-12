@@ -33,6 +33,9 @@ docker run -d \
   -v /proc:/host/proc:ro \
   -v /sys:/host/sys:ro \
   -v /etc/os-release:/host/etc/os-release:ro \
+  -v /var/run/docker.sock:/var/run/docker.sock:ro \
+  -e NETDATA_DISABLE_CLOUD=1 \
+  -e DO_NOT_TRACK=1 \
   --cap-add=SYS_PTRACE \
   --security-opt apparmor=unconfined \
   netdata/netdata
@@ -41,7 +44,7 @@ sleep 3
 
 if verify_container_is_running "$CONTAINER_NAME"; then
   echo_green "$CONTAINER_NAME container is running"
-  echo_blue "Access at: http://localhost:$CONTAINER_PORT"
+  echo_blue "Access at: http://localhost:$CONTAINER_PORT/v3/"
   exit 0
 else
   echo_red "$CONTAINER_NAME container failed to start"
