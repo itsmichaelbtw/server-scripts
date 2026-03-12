@@ -472,6 +472,34 @@ ensure_directory() {
   chmod "$PERMS" "$DIR_PATH"
 }
 
+# Function to get the IPv4 address of the WireGuard interface (wg0)
+# Usage: get_wireguard_ip
+# Example:
+#   WG_IP=$(get_wireguard_ip)
+# Returns:
+#   Prints the IP address (e.g. 10.8.0.1) to stdout, or empty string if unavailable
+get_wireguard_ip() {
+  if ! ip link show "wg0" &>/dev/null; then
+    echo ""
+    return 0
+  fi
+  ip -4 addr show "wg0" 2>/dev/null | grep -oP 'inet \K[\d.]+' | head -1 || true
+}
+
+# Function to get the IPv4 subnet (with CIDR) of the WireGuard interface (wg0)
+# Usage: get_wireguard_subnet
+# Example:
+#   WG_SUBNET=$(get_wireguard_subnet)
+# Returns:
+#   Prints the subnet (e.g. 10.8.0.0/24) to stdout, or empty string if unavailable
+get_wireguard_subnet() {
+  if ! ip link show "wg0" &>/dev/null; then
+    echo ""
+    return 0
+  fi
+  ip -4 addr show "wg0" 2>/dev/null | grep -oP 'inet \K[\d.]+/\d+' | head -1 || true
+}
+
 # Function to configure UFW to allow WireGuard subnet access to a specific port
 # Usage: configure_ufw_for_wireguard port_number [proto]
 # Example:
@@ -507,7 +535,7 @@ configure_ufw_for_wireguard() {
   fi
   
   local WG_SUBNET
-  WG_SUBNET=$(ip -4 addr show "wg0" 2>/dev/null | grep -oP 'inet \K[\d.]+/\d+' || true)
+  WG_SUBNET=$(get_wireguard_subnet)
   
   if [[ -z "$WG_SUBNET" ]]; then
     echo_yellow "WireGuard subnet not yet configured. Localhost access enabled."

@@ -156,10 +156,6 @@ Ensure selected ports don't conflict with existing services:
 sudo netstat -tlnp | grep LISTEN
 ```
 
-
-
-
-
 ## License
 
 MIT License - See [LICENSE](./LICENSE) for details.
