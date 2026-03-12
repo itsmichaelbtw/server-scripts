@@ -104,7 +104,7 @@ LOKI_PORT=3050
 # ... etc
 ```
 
-`ports.conf` is automatically loaded by every script via `common.sh`. Each port variable has a built-in fallback default, so the file is optional — if it is absent, all defaults apply. When you change a port, re-run the relevant deployment script to redeploy the container on the new port. Homer's dashboard links are also regenerated from `ports.conf` on each deploy.
+`ports.conf` is automatically loaded by every script via `common.sh`. The file is **required** — scripts will exit with an error if it is missing or if a required variable is undefined. When you change a port, re-run the relevant deployment script to redeploy the container on the new port. Homer's dashboard links are also regenerated from `ports.conf` on each deploy.
 
 ## Grafana
 

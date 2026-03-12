@@ -91,8 +91,8 @@ sudo /path/to/04-monitoring/02-disk/run.sh
 **Configuration:**
 - Config file: `/etc/prometheus/prometheus.yml`
 - Data directory: `/prometheus-data` (customizable)
-- Web interface: `http://localhost:9090` (default)
-- API endpoint: `http://localhost:9090/api/v1/query`
+- Web interface: `http://localhost:3025` (default `PROMETHEUS_PORT`)
+- API endpoint: `http://localhost:3025/api/v1/query`
 
 **Usage:**
 
@@ -118,8 +118,8 @@ sudo /path/to/04-monitoring/03-prometheus/run.sh
 **Configuration:**
 - Config file: `/etc/loki/loki-config.yml`
 - Data directory: `/loki-data` (customizable)
-- Web interface: `http://localhost:3100` (default)
-- API endpoint: `http://localhost:3100/loki/api/v1/push` (for log ingestion)
+- Web interface: `http://localhost:3050` (default `LOKI_PORT`)
+- API endpoint: `http://localhost:3050/loki/api/v1/push` (for log ingestion)
 
 **Usage:**
 
@@ -145,8 +145,8 @@ sudo /path/to/04-monitoring/04-loki/run.sh
 **Configuration:**
 - Config file: `/etc/alertmanager/alertmanager.yml`
 - Data directory: `/alertmanager-data` (customizable)
-- Web interface: `http://localhost:9093` (default)
-- API endpoint: `http://localhost:9093/api/v1/alerts`
+- Web interface: `http://localhost:3075` (default `ALERTMANAGER_PORT`)
+- API endpoint: `http://localhost:3075/api/v1/alerts`
 
 **Usage:**
 
@@ -260,14 +260,13 @@ sudo /path/to/05-gui/05-grafana/run.sh               # Grafana dashboard
                    │
                    ▼
         ┌──────────────────────┐
-        │     Promtail         │ ◄─ Reads logs from files
-        │                      │    & journalctl
+        │      Alloy           │ ◄─ Reads logs from files
+        │                      │    & Docker container logs
         └──────────┬───────────┘
                    │ Ships logs
                    ▼
         ┌──────────────────────┐
-        │   Loki (3100)        │ ◄─ Aggregates & indexes logs
-        │                      │    & Docker log driver
+        │   Loki (3050)        │ ◄─ Aggregates & indexes logs
         └──────────┬───────────┘
                    │
                    ▼
@@ -280,9 +279,9 @@ sudo /path/to/05-gui/05-grafana/run.sh               # Grafana dashboard
                  │
                  ▼
         ┌──────────────────────┐
-        │  AlertManager (9093) │ ◄─ Sends notifications
+        │  AlertManager (3075) │ ◄─ Sends notifications
         └──────────────────────┘
 
 Metrics flow:
-    System metrics ──► Prometheus (9090) ──► Grafana
+    System metrics ──► Prometheus (3025) ──► Grafana
 ```

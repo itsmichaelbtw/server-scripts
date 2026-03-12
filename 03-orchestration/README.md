@@ -50,8 +50,7 @@ You will be prompted to confirm execution of each script.
 
 - **OS:** Ubuntu 18.04 LTS or later
 - **Privileges:** Root access (run with `sudo`)
-- **Internet:** Required for package downloads and Cloudflare connectivity
-- **Memory:** At least 1GB RAM recommended (more for k3s/Traefik)
+- **Internet:** Required for package downloads
 
 ---
 
@@ -60,5 +59,3 @@ You will be prompted to confirm execution of each script.
 Scripts run in numerical order:
 
 1. `00-docker` - Container runtime
-2. `01-k3s` - Kubernetes cluster
-3. `02-traefik` - Ingress controller

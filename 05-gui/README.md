@@ -26,8 +26,10 @@ The `05-gui` directory contains the following scripts executed in sequence:
 
 **What it does:**
 - Requires Docker installation
-- Prompts for NetData port
-- Creates Docker container with volumes
+- Reads port from `ports.conf` (`NETDATA_PORT`)
+- Creates Docker container with host system mounts (proc, sys, passwd, docker.sock)
+- Disables Netdata Cloud sign-in (`NETDATA_DISABLE_CLOUD=1`)
+- Dashboard is accessible at the `/v3/` path (bypasses login screen in Netdata v2)
 - Displays service access URL
 
 **Usage:**
@@ -45,9 +47,9 @@ sudo /path/to/05-gui/00-netdata/run.sh
 **What it does:**
 - Requires Docker installation
 - Prompts for host directory to serve
-- Prompts for FileBrowser port
-- Creates Docker container
-- Disables authentication (requires Cloudflare Tunnel for security)
+- Reads port from `ports.conf` (`FILEBROWSER_PORT`)
+- Runs as root (`--user 0:0`) to ensure access to system-owned files and log directories
+- Disables authentication (requires VPN or Cloudflare Tunnel for security)
 - Displays service access URL
 
 **Usage:**
@@ -64,7 +66,7 @@ sudo /path/to/05-gui/01-filebrowser/run.sh
 
 **What it does:**
 - Requires Docker installation
-- Prompts for Crontab-UI port
+- Reads port from `ports.conf` (`CRONTAB_UI_PORT`)
 - Prompts for host directory for crontab storage
 - Creates Docker container
 - Displays service access URL
@@ -83,7 +85,7 @@ sudo /path/to/05-gui/02-crontab-ui/run.sh
 
 **What it does:**
 - Requires Docker installation
-- Prompts for Gatus port
+- Reads port from `ports.conf` (`GATUS_PORT`)
 - Creates Docker container with health check configuration
 - Displays service access URL
 
@@ -102,10 +104,12 @@ sudo /path/to/05-gui/03-gatus/run.sh
 **What it does:**
 - Requires Docker installation
 - Prompts for Vaultwarden data directory path
+- Reads port from `ports.conf` (`VAULTWARDEN_PORT`)
 - Generates secure admin token
+- Automatically generates a self-signed RSA TLS certificate (stored in `$DATA_DIR/ssl/`) on first run
+- Enables HTTPS via `ROCKET_TLS` — required for the WebCrypto API used by Bitwarden clients
 - Creates Docker container with persistent volumes
-- Enables HTTPS and integrates with reverse proxy
-- Displays service access URL and admin token
+- Displays service access URL (`https://`) and admin token
 
 **Usage:**
 
@@ -121,11 +125,11 @@ sudo /path/to/05-gui/04-vaultwarden/run.sh
 
 **What it does:**
 - Requires Docker installation
-- Prompts for Grafana port
+- Reads port from `ports.conf` (`GRAFANA_PORT`)
 - Creates data directory for persistent storage
-- Creates Docker container with Prometheus and Loki datasources
-- Enables alerting integration
-- Displays service access URL and default credentials
+- Creates Docker container with anonymous admin access enabled — no login required when accessed over the VPN
+- Pre-installs clock and worldmap panel plugins
+- Displays service access URL
 
 **Usage:**
 
@@ -140,11 +144,11 @@ sudo /path/to/05-gui/05-grafana/run.sh
 **Purpose:** Deploy Homer for centralized service dashboard.
 
 **What it does:**
-- Requires Docker installation
-- Creates data and config directories
-- Copies template configuration
-- Prompts for Homer port
-- Creates Docker container with persistent volumes
+- Requires Docker installation and an active WireGuard interface (`wg0`)
+- Reads port from `ports.conf` (`HOMER_PORT`)
+- Auto-detects the WireGuard server IP via `get_wireguard_ip()`
+- Renders `config.yml` template — substitutes `{{WG_IP}}` and all `{{SERVICE_PORT}}` placeholders from `ports.conf`
+- Creates Docker container with persistent assets volume
 - Displays configuration file location and access URL
 
 **Usage:**

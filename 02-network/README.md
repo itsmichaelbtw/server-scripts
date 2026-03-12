@@ -95,7 +95,7 @@ You will be prompted to confirm execution of each script.
 
 - **OS:** Ubuntu 18.04 LTS or later
 - **Privileges:** Root access (run with `sudo`)
-- **Internet:** Required for package downloads and Cloudflare connectivity
+- **Internet:** Required for package downloads
 
 ---
 
