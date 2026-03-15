@@ -60,8 +60,11 @@ if [[ "$REPLY" == "N" ]]; then
   exit 0
 fi
 
+ssh_open_session "$SSH_USER" "$SERVER_IP" "$SSH_PORT"
+trap ssh_close_session EXIT
+
 echo_yellow "\nCreating remote directory structure..."
-ssh -p "$SSH_PORT" "${SSH_USER}@${SERVER_IP}" "mkdir -p $REMOTE_DIR"
+ssh_run "mkdir -p $REMOTE_DIR"
 echo_green "Created remote directory"
 
 echo_yellow "Copying files to remote server..."
@@ -77,23 +80,17 @@ tar -czvf transfer.tar.gz \
   --exclude='transfer.tar.gz' \
   .
 
-scp -P "$SSH_PORT" transfer.tar.gz "${SSH_USER}@${SERVER_IP}:$REMOTE_DIR/transfer.tar.gz"
-ssh -p "$SSH_PORT" "${SSH_USER}@${SERVER_IP}" "cd $REMOTE_DIR && tar -xzvf transfer.tar.gz && rm transfer.tar.gz"
+scp_put transfer.tar.gz "$REMOTE_DIR/transfer.tar.gz"
+ssh_run "cd $REMOTE_DIR && tar -xzvf transfer.tar.gz && rm transfer.tar.gz"
 
 rm transfer.tar.gz
-
-TRANSFER_EXIT_STATUS=$?
-if [[ $TRANSFER_EXIT_STATUS -ne 0 ]]; then
-  echo_red "File transfer failed with exit status $TRANSFER_EXIT_STATUS"
-  exit 1
-fi
 
 echo_green "Server scripts successfully copied to ${SSH_USER}@${SERVER_IP}:${REMOTE_DIR}"
 
 prompt_yes_no "Make scripts executable on remote system?" "Y"
 if [[ "$REPLY" == "Y" ]]; then
   echo_yellow "Making scripts executable..."
-  ssh -p "$SSH_PORT" "${SSH_USER}@${SERVER_IP}" "chmod +x $REMOTE_DIR/*.sh $REMOTE_DIR/*/*.sh $REMOTE_DIR/*/*/*.sh 2>/dev/null || echo 'Some files could not be made executable'"
+  ssh_run "chmod +x $REMOTE_DIR/*.sh $REMOTE_DIR/*/*.sh $REMOTE_DIR/*/*/*.sh 2>/dev/null || echo 'Some files could not be made executable'"
   echo_green "Scripts are now executable"
 fi
 

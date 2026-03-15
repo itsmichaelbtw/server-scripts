@@ -96,34 +96,12 @@ if [[ -n "${SUDO_USER:-}" ]]; then
   chown "$SUDO_USER:$USER_GROUP" "$PRIVATE_KEY" "$PUBLIC_KEY"
 fi
 
-add_public_key_to_remote() {
-  local TARGET_USER="$1"
-  local AUTH_USER="$2"
-  local PUBKEY_CONTENT="$3"
-  local SUDO_PASS="${4:-}"
-
-  local SSH_OPTS="-o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$(eval echo \"~${ACTUAL_USER}/.ssh/known_hosts\") -o BatchMode=no"
-
-  if [[ "$AUTH_USER" == "$TARGET_USER" ]]; then
-    if ssh $SSH_OPTS -p "$REMOTE_PORT" "$AUTH_USER@$SERVER_HOST" "mkdir -p ~/.ssh && echo '$PUBKEY_CONTENT' >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys" 2>&1; then
-      return 0
-    fi
-  else
-    if ssh $SSH_OPTS -p "$REMOTE_PORT" "$AUTH_USER@$SERVER_HOST" "echo '$SUDO_PASS' | sudo -S -H -u $TARGET_USER sh -c 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && echo \"$PUBKEY_CONTENT\" >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys'" 2>&1; then
-      return 0
-    fi
-  fi
-
-  return 1
-}
-
 echo_yellow "\nPreparing to copy public key to server..."
 
 echo_yellow "Clearing old host key entry (if it exists)..."
 ssh-keygen -R "$SERVER_HOST" 2>/dev/null || true
 
 echo_yellow "\nCopying public key to server..."
-echo_yellow "Attempting connection (will try public key first, then password).\n"
 
 PUBKEY_CONTENT=$(cat "$PUBLIC_KEY")
 SUDO_PASS=""
@@ -133,14 +111,28 @@ if [[ "$AUTH_USER" != "$REMOTE_USER" ]]; then
   echo
 fi
 
-if add_public_key_to_remote "$REMOTE_USER" "$AUTH_USER" "$PUBKEY_CONTENT" "$SUDO_PASS"; then
+KEY_COPIED=false
+if ssh_open_session "$AUTH_USER" "$SERVER_HOST" "$REMOTE_PORT"; then
+  trap ssh_close_session EXIT
+
   if [[ "$AUTH_USER" == "$REMOTE_USER" ]]; then
-    echo_green "Public key added to $REMOTE_USER's authorized_keys"
+    if ssh_run "mkdir -p ~/.ssh && echo '$PUBKEY_CONTENT' >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"; then
+      KEY_COPIED=true
+      echo_green "Public key added to $REMOTE_USER's authorized_keys"
+    fi
   else
-    echo_green "Public key added to $REMOTE_USER's authorized_keys via $AUTH_USER account"
-    echo_yellow "\nNote: You authenticated with '$AUTH_USER', and used sudo to add the key to $REMOTE_USER's account."
+    if ssh_run "echo '$SUDO_PASS' | sudo -S -H -u $REMOTE_USER sh -c 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && echo \"$PUBKEY_CONTENT\" >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys'"; then
+      KEY_COPIED=true
+      echo_green "Public key added to $REMOTE_USER's authorized_keys via $AUTH_USER account"
+      echo_yellow "\nNote: You authenticated with '$AUTH_USER', and used sudo to add the key to $REMOTE_USER's account."
+    fi
   fi
-else
+
+  ssh_close_session
+  trap - EXIT
+fi
+
+if [[ "$KEY_COPIED" == false ]]; then
   echo_yellow "Could not copy public key automatically."
   echo_yellow "\nYou can add it manually by running:"
   if [[ "$AUTH_USER" == "$REMOTE_USER" ]]; then
@@ -206,8 +198,13 @@ echo_green "  User: $REMOTE_USER"
 echo_green "  Identity: $PRIVATE_KEY"
 
 echo_yellow "\nTesting SSH connection..."
-if ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=accept-new -i "$PRIVATE_KEY" -p "$REMOTE_PORT" "$REMOTE_USER@$SERVER_HOST" "echo 'SSH connection successful!'" 2>&1; then
-  echo_green "SSH connection test passed"
+if ssh_open_session "$REMOTE_USER" "$SERVER_HOST" "$REMOTE_PORT" "$PRIVATE_KEY"; then
+  trap ssh_close_session EXIT
+  if ssh_run "echo 'SSH connection successful!'"; then
+    echo_green "SSH connection test passed"
+  fi
+  ssh_close_session
+  trap - EXIT
 else
   echo_yellow "[WARNING] SSH connection test failed. Please verify server details and try connecting manually."
   echo_yellow "You can test manually with: ssh -i $PRIVATE_KEY -p $REMOTE_PORT $REMOTE_USER@$SERVER_HOST"
