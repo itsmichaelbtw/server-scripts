@@ -34,16 +34,26 @@ fi
 TEMPLATE_FILE="$SCRIPT_DIR/sshd_config"
 DROPIN_FILE="/etc/ssh/sshd_config.d/99-server-scripts.conf"
 
-validate_ssh_config() {
-  sshd -t -f "$1"
-}
-
 mkdir -p /etc/ssh/sshd_config.d
 render_template_config "$TEMPLATE_FILE" "$DROPIN_FILE" 600 \
   -e "s|{{SSH_PORT}}|$SSH_PORT|g" \
   -e "s|{{PASSWORD_AUTH}}|$PASSWORD_AUTH|g" \
-  -e "s|{{ROOT_LOGIN}}|$ROOT_LOGIN|g" \
-  --validate "validate_ssh_config"
+  -e "s|{{ROOT_LOGIN}}|$ROOT_LOGIN|g"
+
+echo_yellow "Validating SSH configuration..."
+if ! sshd -t 2>&1; then
+  echo_red "SSH config validation failed. Restoring backup..."
+  BACKUP=$(ls -t "${DROPIN_FILE}".backup-* 2>/dev/null | head -1 || true)
+  if [[ -n "$BACKUP" ]]; then
+    cp "$BACKUP" "$DROPIN_FILE"
+    echo_yellow "Backup restored from: $BACKUP"
+  else
+    rm -f "$DROPIN_FILE"
+    echo_yellow "No backup found; removed invalid drop-in."
+  fi
+  exit 1
+fi
+echo_green "SSH config validated successfully."
 
 echo_yellow "Restarting SSH service..."
 if systemctl restart ssh; then

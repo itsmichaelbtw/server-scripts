@@ -2,13 +2,12 @@
 # This file will be processed by the provisioning script.
 
 Port {{SSH_PORT}}
-Protocol 2
 
 PermitRootLogin {{ROOT_LOGIN}}
 PasswordAuthentication {{PASSWORD_AUTH}}
 
 PubkeyAuthentication yes
-ChallengeResponseAuthentication no
+KbdInteractiveAuthentication no
 UsePAM yes
 
 X11Forwarding no
