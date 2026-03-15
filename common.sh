@@ -714,6 +714,109 @@ require_env() {
   fi
 }
 
+# ─── Remote SSH Session (ControlMaster) ─────────────────────────────────────
+#
+# Opens a multiplexed SSH session that all subsequent ssh_run/scp_put calls
+# reuse, so the user only authenticates once. Tries key auth first, falls back
+# to interactive password.
+#
+# Usage:
+#   ssh_open_session USER HOST [PORT] [IDENTITY_FILE]
+#   ssh_run COMMAND [ARGS...]
+#   scp_put LOCAL_FILE REMOTE_PATH
+#   ssh_close_session
+#
+# Example:
+#   ssh_open_session ubuntu 192.168.1.1 22 ~/.ssh/my_key
+#   ssh_run "mkdir -p ~/app"
+#   scp_put ./app.tar.gz ~/app/app.tar.gz
+#   ssh_run "tar -xzf ~/app/app.tar.gz -C ~/app"
+#   ssh_close_session
+
+_SSH_CTL_PATH=""
+_SSH_CTL_USER=""
+_SSH_CTL_HOST=""
+_SSH_CTL_PORT=""
+
+ssh_open_session() {
+  local USER="$1"
+  local HOST="$2"
+  local PORT="${3:-22}"
+  local IDENTITY="${4:-}"
+
+  _SSH_CTL_PATH="/tmp/ssh_ctl_$$_${USER}_${HOST}"
+  _SSH_CTL_USER="$USER"
+  _SSH_CTL_HOST="$HOST"
+  _SSH_CTL_PORT="$PORT"
+
+  # Always start clean — remove any stale socket from a previous attempt
+  rm -f "$_SSH_CTL_PATH"
+
+  local CTL_OPTS=(
+    -o StrictHostKeyChecking=accept-new
+    -o ControlMaster=yes
+    -o "ControlPath=$_SSH_CTL_PATH"
+    -o ControlPersist=60
+    -o ConnectTimeout=10
+    -p "$PORT"
+  )
+
+  # Probe key auth silently WITHOUT ControlMaster first (avoids leaving a broken socket)
+  local PROBE_OPTS=(-o BatchMode=yes -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new -p "$PORT")
+  [[ -n "$IDENTITY" ]] && PROBE_OPTS+=(-i "$IDENTITY" -o IdentitiesOnly=yes)
+
+  if ssh "${PROBE_OPTS[@]}" "$USER@$HOST" "exit" 2>/dev/null; then
+    # Key auth works — open ControlMaster with key
+    [[ -n "$IDENTITY" ]] && CTL_OPTS+=(-i "$IDENTITY" -o IdentitiesOnly=yes)
+    if ssh "${CTL_OPTS[@]}" -o BatchMode=yes "$USER@$HOST" "exit" 2>/dev/null; then
+      echo_green "Connected to $HOST via SSH key"
+      return 0
+    fi
+  fi
+
+  # Fall back to interactive password auth — clean up any partial socket first
+  rm -f "$_SSH_CTL_PATH"
+  echo_yellow "SSH key auth failed, trying password..."
+  if ssh "${CTL_OPTS[@]}" -o BatchMode=no -o PubkeyAuthentication=no "$USER@$HOST" "exit"; then
+    echo_green "Connected to $HOST via password"
+    return 0
+  fi
+
+  echo_red "Could not authenticate to $USER@$HOST"
+  rm -f "$_SSH_CTL_PATH"
+  _SSH_CTL_PATH=""
+  return 1
+}
+
+ssh_run() {
+  if [[ -z "$_SSH_CTL_PATH" ]]; then
+    echo_red "No SSH session open. Call ssh_open_session first."
+    return 1
+  fi
+  ssh -o "ControlPath=$_SSH_CTL_PATH" -p "$_SSH_CTL_PORT" "$_SSH_CTL_USER@$_SSH_CTL_HOST" "$@"
+}
+
+scp_put() {
+  local LOCAL_FILE="$1"
+  local REMOTE_PATH="$2"
+  if [[ -z "$_SSH_CTL_PATH" ]]; then
+    echo_red "No SSH session open. Call ssh_open_session first."
+    return 1
+  fi
+  scp -o "ControlPath=$_SSH_CTL_PATH" -P "$_SSH_CTL_PORT" "$LOCAL_FILE" "$_SSH_CTL_USER@$_SSH_CTL_HOST:$REMOTE_PATH"
+}
+
+ssh_close_session() {
+  if [[ -n "$_SSH_CTL_PATH" ]]; then
+    ssh -O exit -o "ControlPath=$_SSH_CTL_PATH" "$_SSH_CTL_USER@$_SSH_CTL_HOST" 2>/dev/null || true
+    rm -f "$_SSH_CTL_PATH"
+    echo_yellow "SSH session closed: $_SSH_CTL_USER@$_SSH_CTL_HOST"
+    _SSH_CTL_PATH=""
+  fi
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+
 # Auto-load ports.conf if present at the repo root.
 # ROOT_DIR is always set by each script before sourcing common.sh.
 if [[ -n "${ROOT_DIR:-}" ]] && [[ -f "$ROOT_DIR/ports.conf" ]]; then
