@@ -19,7 +19,7 @@ TCPKeepAlive yes
 ClientAliveInterval 300
 ClientAliveCountMax 2
 
-MaxAuthTries 3
+MaxAuthTries 6
 LoginGraceTime 20
 
 Subsystem sftp /usr/lib/openssh/sftp-server
