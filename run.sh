@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Top-level wrapper: execute the run.sh in the first child directory
+# File path: run.sh
+# Purpose: Top-level wrapper to sequentially run all category module scripts.
 
 set -euo pipefail
 
@@ -8,37 +9,44 @@ ROOT_DIR="$SCRIPT_DIR"
 source "$ROOT_DIR/common.sh"
 
 SCRIPT_NAME="run"
-SCRIPT_DESC="Top-level wrapper to run the first module"
+SCRIPT_DESC="Top-level wrapper to sequentially run all category modules"
 
 print_script_header
 validate_environment
 
-echo_yellow "Locating first child directory..."
+echo_blue "Searching for category modules..."
+echo_newline
 
-FIRST_DIR=""
-for d in "$SCRIPT_DIR"/*/; do
-  if [[ -d "$d" ]]; then
-    FIRST_DIR="$d"
-    break
+MODULES=$(find "$SCRIPT_DIR" -mindepth 2 -maxdepth 2 -name "run.sh" | sort)
+
+if [[ -z "$MODULES" ]]; then
+  echo_red "No category modules found."
+  exit 1
+fi
+
+echo_blue "Found the following category modules:"
+while IFS= read -r file; do
+  REL_PATH="${file#$SCRIPT_DIR/}"
+  echo_yellow "  - $REL_PATH"
+done <<< "$MODULES"
+echo_newline
+
+while IFS= read -r file; do
+  REL_PATH="${file#$SCRIPT_DIR/}"
+  prompt_yes_no "Run '$REL_PATH'?" "Y"
+  if [[ "$REPLY" == "Y" ]]; then
+    echo_yellow "Executing $REL_PATH..."
+    set +e
+    bash "$file"
+    EXIT_CODE=$?
+    set -e
+    if [[ $EXIT_CODE -ne 0 ]]; then
+      echo_yellow "Warning: $REL_PATH exited with status $EXIT_CODE, continuing..."
+    fi
+  else
+    echo_yellow "Skipping $REL_PATH."
   fi
-done
+  echo_newline
+done <<< "$MODULES"
 
-if [[ -z "$FIRST_DIR" ]]; then
-  echo_red "No child directories found in $SCRIPT_DIR"
-  exit 1
-fi
-
-echo_green "Found first directory: ${FIRST_DIR%/}"
-
-CHILD_RUN="$FIRST_DIR/run.sh"
-
-if [[ -f "$CHILD_RUN" && -x "$CHILD_RUN" ]]; then
-  echo_yellow "Executing: $CHILD_RUN"
-  exec "$CHILD_RUN" "$@"
-elif [[ -f "$CHILD_RUN" ]]; then
-  echo_yellow "Found $CHILD_RUN but it is not executable — running with bash"
-  bash "$CHILD_RUN" "$@"
-else
-  echo_red "No run.sh found in first directory: $FIRST_DIR"
-  exit 1
-fi
+echo_green "All category modules complete."
