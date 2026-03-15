@@ -738,11 +738,50 @@ _SSH_CTL_USER=""
 _SSH_CTL_HOST=""
 _SSH_CTL_PORT=""
 
+# find_ssh_config_identity USER HOST
+# Scans ~/.ssh/config for a Host block where HostName matches HOST and
+# (optionally) User matches USER, then returns the first IdentityFile found.
+find_ssh_config_identity() {
+  local TARGET_USER="$1"
+  local TARGET_HOST="$2"
+  local config="$HOME/.ssh/config"
+  [[ ! -f "$config" ]] && return 0
+
+  local hostname="" identity="" user=""
+  while IFS= read -r line; do
+    line="${line#"${line%%[![:space:]]*}"}"
+    if [[ "$line" =~ ^[Hh]ost[[:space:]]+(.+) && ! "$line" =~ ^[Hh]ost[Nn]ame ]]; then
+      # Flush previous block
+      if [[ -n "$hostname" && "$hostname" == "$TARGET_HOST" \
+            && ( -z "$user" || "$user" == "$TARGET_USER" ) \
+            && -n "$identity" ]]; then
+        echo "${identity/#\~/$HOME}"
+        return 0
+      fi
+      hostname=""; identity=""; user=""
+    elif [[ "$line" =~ ^[Hh]ost[Nn]ame[[:space:]]+(.+) ]]; then
+      hostname="${BASH_REMATCH[1]}"
+    elif [[ "$line" =~ ^[Uu]ser[[:space:]]+(.+) ]]; then
+      user="${BASH_REMATCH[1]}"
+    elif [[ "$line" =~ ^[Ii]dentity[Ff]ile[[:space:]]+(.+) ]]; then
+      identity="${BASH_REMATCH[1]}"
+    fi
+  done < "$config"
+
+  # Check last block
+  if [[ -n "$hostname" && "$hostname" == "$TARGET_HOST" \
+        && ( -z "$user" || "$user" == "$TARGET_USER" ) \
+        && -n "$identity" ]]; then
+    echo "${identity/#\~/$HOME}"
+  fi
+}
+
 ssh_open_session() {
   local USER="$1"
   local HOST="$2"
   local PORT="${3:-22}"
   local IDENTITY="${4:-}"
+  local PASSWORD="${5:-}"
 
   _SSH_CTL_PATH="/tmp/ssh_ctl_$$_${USER}_${HOST}"
   _SSH_CTL_USER="$USER"
@@ -761,6 +800,13 @@ ssh_open_session() {
     -p "$PORT"
   )
 
+  # If no identity supplied, check SSH config for a matching entry by HostName+User
+  if [[ -z "$IDENTITY" ]]; then
+    local DISCOVERED
+    DISCOVERED=$(find_ssh_config_identity "$USER" "$HOST")
+    [[ -n "$DISCOVERED" && -f "$DISCOVERED" ]] && IDENTITY="$DISCOVERED"
+  fi
+
   # Probe key auth silently WITHOUT ControlMaster first (avoids leaving a broken socket)
   local PROBE_OPTS=(-o BatchMode=yes -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new -p "$PORT")
   [[ -n "$IDENTITY" ]] && PROBE_OPTS+=(-i "$IDENTITY" -o IdentitiesOnly=yes)
@@ -774,12 +820,27 @@ ssh_open_session() {
     fi
   fi
 
-  # Fall back to interactive password auth — clean up any partial socket first
+  # Fall back to password auth — clean up any partial socket first
   rm -f "$_SSH_CTL_PATH"
   echo_yellow "SSH key auth failed, trying password..."
-  if ssh "${CTL_OPTS[@]}" -o BatchMode=no -o PubkeyAuthentication=no "$USER@$HOST" "exit"; then
-    echo_green "Connected to $HOST via password"
-    return 0
+
+  if [[ -n "$PASSWORD" ]]; then
+    # Use SSH_ASKPASS to feed the password non-interactively
+    local ASKPASS_SCRIPT="/tmp/ssh_askpass_$$.sh"
+    printf '#!/bin/sh\nprintf "%%s" "%s"\n' "$PASSWORD" > "$ASKPASS_SCRIPT"
+    chmod 700 "$ASKPASS_SCRIPT"
+    if SSH_ASKPASS="$ASKPASS_SCRIPT" SSH_ASKPASS_REQUIRE=force DISPLAY=:0 \
+        ssh "${CTL_OPTS[@]}" -o BatchMode=no -o PubkeyAuthentication=no "$USER@$HOST" "exit" 2>/dev/null; then
+      rm -f "$ASKPASS_SCRIPT"
+      echo_green "Connected to $HOST via password"
+      return 0
+    fi
+    rm -f "$ASKPASS_SCRIPT"
+  else
+    if ssh "${CTL_OPTS[@]}" -o BatchMode=no -o PubkeyAuthentication=no "$USER@$HOST" "exit"; then
+      echo_green "Connected to $HOST via password"
+      return 0
+    fi
   fi
 
   echo_red "Could not authenticate to $USER@$HOST"
@@ -794,6 +855,15 @@ ssh_run() {
     return 1
   fi
   ssh -o "ControlPath=$_SSH_CTL_PATH" -p "$_SSH_CTL_PORT" "$_SSH_CTL_USER@$_SSH_CTL_HOST" "$@"
+}
+
+# Like ssh_run but allocates a pseudo-TTY — required for interactive sudo prompts.
+ssh_run_tty() {
+  if [[ -z "$_SSH_CTL_PATH" ]]; then
+    echo_red "No SSH session open. Call ssh_open_session first."
+    return 1
+  fi
+  ssh -t -o "ControlPath=$_SSH_CTL_PATH" -p "$_SSH_CTL_PORT" "$_SSH_CTL_USER@$_SSH_CTL_HOST" "$@"
 }
 
 scp_put() {

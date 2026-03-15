@@ -104,11 +104,8 @@ ssh-keygen -R "$SERVER_HOST" 2>/dev/null || true
 echo_yellow "\nCopying public key to server..."
 
 PUBKEY_CONTENT=$(cat "$PUBLIC_KEY")
-SUDO_PASS=""
 if [[ "$AUTH_USER" != "$REMOTE_USER" ]]; then
   echo_yellow "Authenticating as '$AUTH_USER' to add key for '$REMOTE_USER' (requires sudo on the server)."
-  read_from_terminal -rsp "Enter sudo password for $AUTH_USER@$SERVER_HOST: " SUDO_PASS
-  echo
 fi
 
 KEY_COPIED=false
@@ -121,7 +118,7 @@ if ssh_open_session "$AUTH_USER" "$SERVER_HOST" "$REMOTE_PORT"; then
       echo_green "Public key added to $REMOTE_USER's authorized_keys"
     fi
   else
-    if ssh_run "echo '$SUDO_PASS' | sudo -S -H -u $REMOTE_USER sh -c 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && echo \"$PUBKEY_CONTENT\" >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys'"; then
+    if ssh_run_tty "sudo -H -u $REMOTE_USER sh -c 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && echo \"$PUBKEY_CONTENT\" >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys'"; then
       KEY_COPIED=true
       echo_green "Public key added to $REMOTE_USER's authorized_keys via $AUTH_USER account"
       echo_yellow "\nNote: You authenticated with '$AUTH_USER', and used sudo to add the key to $REMOTE_USER's account."
@@ -197,12 +194,11 @@ echo_green "  Host: $SERVER_HOST:$REMOTE_PORT"
 echo_green "  User: $REMOTE_USER"
 echo_green "  Identity: $PRIVATE_KEY"
 
-echo_yellow "\nTesting SSH connection..."
+echo_yellow "\nTesting SSH connection as '$REMOTE_USER' using new key..."
 if ssh_open_session "$REMOTE_USER" "$SERVER_HOST" "$REMOTE_PORT" "$PRIVATE_KEY"; then
   trap ssh_close_session EXIT
-  if ssh_run "echo 'SSH connection successful!'"; then
-    echo_green "SSH connection test passed"
-  fi
+  ssh_run "exit"
+  echo_green "SSH connection test passed"
   ssh_close_session
   trap - EXIT
 else
