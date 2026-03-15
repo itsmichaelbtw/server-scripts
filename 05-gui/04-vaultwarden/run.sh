@@ -13,7 +13,11 @@ CONTAINER_NAME=vaultwarden
 require_env "VAULTWARDEN_PORT"
 CONTAINER_PORT="$VAULTWARDEN_PORT"
 VAULTWARDEN_DATA_DIR="${1:-/vw-data}"
-ADMIN_TOKEN=$(openssl rand -base64 32)
+
+ADMIN_TOKEN_PLAIN=$(openssl rand -base64 48)
+require_cmd "argon2" "argon2"
+ADMIN_TOKEN_SALT=$(openssl rand -base64 32)
+ADMIN_TOKEN=$(echo -n "$ADMIN_TOKEN_PLAIN" | argon2 "$ADMIN_TOKEN_SALT" -id -t 1 -m 16 -p 4 -l 32 -e)
 
 print_script_header
 validate_environment
@@ -54,7 +58,7 @@ sleep 3
 
 if verify_container_is_running "$CONTAINER_NAME"; then
   echo_green "$CONTAINER_NAME container is running"
-  echo_blue "Admin panel access token (save this): $ADMIN_TOKEN"
+  echo_blue "Admin panel token (use this to log in): $ADMIN_TOKEN_PLAIN"
   echo_blue "Data persisted in: $VAULTWARDEN_DATA_DIR"
   echo_blue "Access at: https://localhost:$CONTAINER_PORT"
   exit 0

@@ -16,6 +16,12 @@ CONFIG_DIR="/etc/prometheus"
 CONFIG_FILE="$CONFIG_DIR/prometheus.yml"
 PROMETHEUS_DATA_DIR="${1:-/prometheus-data}"
 
+# Internal ports are fixed by each container image — not host-mapped ports
+PROMETHEUS_INTERNAL_PORT=9090
+ALERTMANAGER_INTERNAL_PORT=9093
+LOKI_INTERNAL_PORT=3100
+ALLOY_INTERNAL_PORT=12345
+
 print_script_header
 validate_environment
 ensure_docker
@@ -28,7 +34,11 @@ configure_ufw_for_wireguard "$CONTAINER_PORT" tcp
 ensure_directory "$CONFIG_DIR" 755
 ensure_directory "$PROMETHEUS_DATA_DIR" 755
 chown -R 65534:65534 "$PROMETHEUS_DATA_DIR"
-render_template_config "$TEMPLATE_FILE" "$CONFIG_FILE" 644
+render_template_config "$TEMPLATE_FILE" "$CONFIG_FILE" 644 \
+  -e "s|{{PROMETHEUS_INTERNAL_PORT}}|$PROMETHEUS_INTERNAL_PORT|g" \
+  -e "s|{{ALERTMANAGER_INTERNAL_PORT}}|$ALERTMANAGER_INTERNAL_PORT|g" \
+  -e "s|{{LOKI_INTERNAL_PORT}}|$LOKI_INTERNAL_PORT|g" \
+  -e "s|{{ALLOY_INTERNAL_PORT}}|$ALLOY_INTERNAL_PORT|g"
 
 docker run -d \
   --name="$CONTAINER_NAME" \

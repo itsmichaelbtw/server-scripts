@@ -42,7 +42,7 @@ docker run -d \
   -v /var/lib/alloy/data:/var/lib/alloy/data \
   -v /var/log:/var/log:ro \
   grafana/alloy:"$ALLOY_VERSION" \
-  run --server.http.listen-addr=0.0.0.0:$CONTAINER_PORT --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
+  run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
 
 sleep 3
 
