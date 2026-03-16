@@ -37,6 +37,12 @@ services:
         tag: "monitoring"
         url: http://{{WG_IP}}:{{ALERTMANAGER_PORT}}
         target: "_blank"
+      - name: "Alloy"
+        logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/alloy.webp"
+        subtitle: "Telemetry collector"
+        tag: "monitoring"
+        url: http://{{WG_IP}}:{{ALLOY_PORT}}
+        target: "_blank"
 
   - name: "GUI"
     icon: "fas fa-tools"
@@ -76,4 +82,10 @@ services:
         subtitle: "Dashboards"
         tag: "gui"
         url: http://{{WG_IP}}:{{GRAFANA_PORT}}
+        target: "_blank"
+      - name: "Portainer"
+        logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/portainer.webp"
+        subtitle: "Container management"
+        tag: "gui"
+        url: https://{{WG_IP}}:{{PORTAINER_PORT}}
         target: "_blank"

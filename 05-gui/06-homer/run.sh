@@ -39,24 +39,28 @@ chmod 755 "$ASSETS_DIR"
 require_env "PROMETHEUS_PORT"
 require_env "LOKI_PORT"
 require_env "ALERTMANAGER_PORT"
+require_env "ALLOY_PORT"
 require_env "NETDATA_PORT"
 require_env "FILEBROWSER_PORT"
 require_env "CRONTAB_UI_PORT"
 require_env "GATUS_PORT"
 require_env "VAULTWARDEN_PORT"
 require_env "GRAFANA_PORT"
+require_env "PORTAINER_PORT"
 
 render_template_config "$TEMPLATE_FILE" "$CONFIG_FILE" 644 \
   -e "s|{{WG_IP}}|$WG_IP|g" \
   -e "s|{{PROMETHEUS_PORT}}|$PROMETHEUS_PORT|g" \
   -e "s|{{LOKI_PORT}}|$LOKI_PORT|g" \
   -e "s|{{ALERTMANAGER_PORT}}|$ALERTMANAGER_PORT|g" \
+  -e "s|{{ALLOY_PORT}}|$ALLOY_PORT|g" \
   -e "s|{{NETDATA_PORT}}|$NETDATA_PORT|g" \
   -e "s|{{FILEBROWSER_PORT}}|$FILEBROWSER_PORT|g" \
   -e "s|{{CRONTAB_UI_PORT}}|$CRONTAB_UI_PORT|g" \
   -e "s|{{GATUS_PORT}}|$GATUS_PORT|g" \
   -e "s|{{VAULTWARDEN_PORT}}|$VAULTWARDEN_PORT|g" \
-  -e "s|{{GRAFANA_PORT}}|$GRAFANA_PORT|g"
+  -e "s|{{GRAFANA_PORT}}|$GRAFANA_PORT|g" \
+  -e "s|{{PORTAINER_PORT}}|$PORTAINER_PORT|g"
 
 docker run -d \
   --name="$CONTAINER_NAME" \
