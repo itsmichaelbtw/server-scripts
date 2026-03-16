@@ -33,6 +33,30 @@ fi
 
 TEMPLATE_FILE="$SCRIPT_DIR/sshd_config"
 DROPIN_FILE="/etc/ssh/sshd_config.d/99-server-scripts.conf"
+MAIN_SSHD_CONFIG="/etc/ssh/sshd_config"
+DROPIN_DIR="/etc/ssh/sshd_config.d"
+
+# Comment out any conflicting directives we manage from the main config
+# and all existing drop-in files (cloud-init etc.), so our 99- file wins.
+MANAGED_DIRECTIVES=(PasswordAuthentication PermitRootLogin Port)
+
+echo_yellow "Neutralising conflicting directives in existing SSH configs..."
+backup_config_file "$MAIN_SSHD_CONFIG"
+for DIRECTIVE in "${MANAGED_DIRECTIVES[@]}"; do
+  sed -i "s/^\(${DIRECTIVE}[[:space:]]\)/#\1/" "$MAIN_SSHD_CONFIG"
+done
+
+mkdir -p "$DROPIN_DIR"
+for CONF in "$DROPIN_DIR"/*.conf; do
+  # Skip our own file and backup files
+  [[ "$CONF" == "$DROPIN_FILE" ]] && continue
+  [[ "$CONF" == *.backup-* ]] && continue
+  [[ ! -f "$CONF" ]] && continue
+  backup_config_file "$CONF"
+  for DIRECTIVE in "${MANAGED_DIRECTIVES[@]}"; do
+    sed -i "s/^\(${DIRECTIVE}[[:space:]]\)/#\1/" "$CONF"
+  done
+done
 
 mkdir -p /etc/ssh/sshd_config.d
 render_template_config "$TEMPLATE_FILE" "$DROPIN_FILE" 600 \
@@ -41,6 +65,8 @@ render_template_config "$TEMPLATE_FILE" "$DROPIN_FILE" 600 \
   -e "s|{{ROOT_LOGIN}}|$ROOT_LOGIN|g"
 
 echo_yellow "Validating SSH configuration..."
+# sshd -t requires the privilege separation directory to exist
+mkdir -p /run/sshd
 if ! sshd -t 2>&1; then
   echo_red "SSH config validation failed. Restoring backup..."
   BACKUP=$(ls -t "${DROPIN_FILE}".backup-* 2>/dev/null | head -1 || true)

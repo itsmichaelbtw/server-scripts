@@ -20,5 +20,3 @@ ClientAliveCountMax 2
 
 MaxAuthTries 6
 LoginGraceTime 20
-
-Subsystem sftp /usr/lib/openssh/sftp-server
