@@ -66,7 +66,7 @@ docker run -d \
   --name="$CONTAINER_NAME" \
   --network="$DOCKER_NETWORK_NAME" \
   --restart=unless-stopped \
-  -p "$CONTAINER_PORT:8080" \
+  -p "$WG_IP:$CONTAINER_PORT:8080" \
   -v "$ASSETS_DIR":/www/assets \
   b4bz/homer:latest
 
