@@ -89,21 +89,44 @@ add_domain() {
   local CF_EMAIL
   CF_EMAIL=$(cat "$EMAIL_FILE")
 
+  local DOMAIN_ARGS=()
+  local DOMAINS=()
+
+  echo_yellow "Enter each domain name one at a time. Leave blank when done."
+  echo_newline
+
   while true; do
-    read_from_terminal -rp "Enter domain name (e.g. example.com): " DOMAIN
-    [[ -n "$DOMAIN" ]] && break
-    echo_red "Domain cannot be empty."
+    read_from_terminal -rp "Domain (or leave blank to finish): " DOMAIN
+    if [[ -z "$DOMAIN" ]]; then
+      [[ ${#DOMAINS[@]} -gt 0 ]] && break
+      echo_red "Enter at least one domain."
+      continue
+    fi
+    DOMAINS+=("$DOMAIN")
+    prompt_yes_no "Include wildcard (*.${DOMAIN})?" "Y"
+    if [[ "$REPLY" == "Y" ]]; then
+      prompt_yes_no "Also include bare domain (${DOMAIN})?" "Y"
+      if [[ "$REPLY" == "Y" ]]; then
+        DOMAIN_ARGS+=("-d" "$DOMAIN")
+      fi
+      DOMAIN_ARGS+=("-d" "*.${DOMAIN}")
+    else
+      DOMAIN_ARGS+=("-d" "$DOMAIN")
+    fi
+    echo_newline
   done
 
-  prompt_yes_no "Include wildcard certificate (*.${DOMAIN})?" "Y"
-  local INCLUDE_WILDCARD="$REPLY"
+  local PRIMARY_DOMAIN="${DOMAINS[0]}"
 
-  local DOMAIN_ARGS=("-d" "$DOMAIN")
-  if [[ "$INCLUDE_WILDCARD" == "Y" ]]; then
-    DOMAIN_ARGS+=("-d" "*.${DOMAIN}")
-  fi
+  echo_newline
+  echo_yellow "Domains to be included in certificate:"
+  for arg in "${DOMAIN_ARGS[@]}"; do
+    [[ "$arg" == "-d" ]] && continue
+    echo_blue "  $arg"
+  done
+  echo_newline
 
-  echo_yellow "Requesting certificate for $DOMAIN — this may take up to 60 seconds..."
+  echo_yellow "Requesting certificate — this may take up to 60 seconds per domain..."
 
   docker run --rm \
     -v "$LETSENCRYPT_DIR:/etc/letsencrypt" \
@@ -117,11 +140,11 @@ add_domain() {
     --email "$CF_EMAIL" \
     --non-interactive
 
-  echo_green "Certificate issued successfully for $DOMAIN"
+  echo_green "Certificate issued successfully."
   echo_newline
   echo_yellow "Certificate paths (use in your nginx config):"
-  echo_blue "  ssl_certificate     /etc/letsencrypt/live/$DOMAIN/fullchain.pem;"
-  echo_blue "  ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;"
+  echo_blue "  ssl_certificate     /etc/letsencrypt/live/$PRIMARY_DOMAIN/fullchain.pem;"
+  echo_blue "  ssl_certificate_key /etc/letsencrypt/live/$PRIMARY_DOMAIN/privkey.pem;"
 }
 
 list_certificates() {
@@ -223,16 +246,16 @@ while true; do
   show_menu "Certbot Management" \
     "Install Certbot (first-time setup)" \
     "Add domain / issue certificate" \
-    "List certificates and expiry" \
     "Renew certificates now" \
     "Revoke and delete a certificate" \
+    "List certificates and expiry" \
     "Exit"
   case "$MENU_CHOICE" in
     1) install_certbot ;;
     2) add_domain ;;
-    3) list_certificates ;;
-    4) renew_now ;;
-    5) revoke_certificate ;;
+    3) renew_now ;;
+    4) revoke_certificate ;;
+    5) list_certificates ;;
     6) echo_green "Exiting."; exit 0 ;;
   esac
 done
