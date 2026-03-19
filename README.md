@@ -76,17 +76,19 @@ The table below lists the default ports used by each service. All ports can be c
 
 | Port | Service / Script |
 |------:|-----------------|
-| 80 | Homer (`05-gui/06-homer/run.sh`) |
-| 443 | HTTPS (firewall prompts in `01-security/00-firewall/run.sh`) |
-| 3000 | Grafana (`05-gui/05-grafana/run.sh`) |
-| 3025 | Prometheus (`04-monitoring/03-prometheus/run.sh`) |
-| 3050 | Loki (`04-monitoring/04-loki/run.sh`) |
-| 3075 | Alertmanager (`04-monitoring/05-alertmanager/run.sh`) |
-| 3100 | Grafana Alloy (`04-monitoring/06-alloy/run.sh`) |
-| 4025 | FileBrowser (`05-gui/01-filebrowser/run.sh`) |
-| 4050 | Crontab-UI (`05-gui/02-crontab-ui/run.sh`) |
-| 4075 | Gatus (`05-gui/03-gatus/run.sh`) |
-| 4100 | Vaultwarden (`05-gui/04-vaultwarden/run.sh`) |
+| 80 | Homer (`05-gui/06-homer/run.sh`) — WireGuard interface only |
+| 80 | nginx (`02-network/02-nginx/run.sh`) — WAN interface only |
+| 443 | nginx (`02-network/02-nginx/run.sh`) — WAN interface only |
+| 5000 | Grafana (`05-gui/05-grafana/run.sh`) |
+| 5010 | Prometheus (`04-monitoring/03-prometheus/run.sh`) |
+| 5020 | Loki (`04-monitoring/04-loki/run.sh`) |
+| 5030 | Alertmanager (`04-monitoring/05-alertmanager/run.sh`) |
+| 5040 | Grafana Alloy (`04-monitoring/06-alloy/run.sh`) |
+| 5050 | FileBrowser (`05-gui/01-filebrowser/run.sh`) |
+| 5060 | Crontab-UI (`05-gui/02-crontab-ui/run.sh`) |
+| 5070 | Gatus (`05-gui/03-gatus/run.sh`) |
+| 5080 | Vaultwarden (`05-gui/04-vaultwarden/run.sh`) |
+| 5090 | Portainer (`05-gui/07-portainer/run.sh`) |
 | 19999 | Netdata (`05-gui/00-netdata/run.sh`) |
 | 51820/udp | WireGuard VPN listening port (default prompt in `02-network/00-wireguard/run.sh`) |
 | 51893/tcp | Alloy auxiliary port (`04-monitoring/06-alloy/run.sh`) |
@@ -98,9 +100,9 @@ All service ports are defined in `ports.conf` at the repository root. Edit this 
 
 ```bash
 # ports.conf
-GRAFANA_PORT=3000
-PROMETHEUS_PORT=3025
-LOKI_PORT=3050
+GRAFANA_PORT=5000
+PROMETHEUS_PORT=5010
+LOKI_PORT=5020
 # ... etc
 ```
 
@@ -210,7 +212,7 @@ If the target server does not have `git` installed, you can transfer the reposit
 |----------|-------------|------|
 | **00-system** | System foundation (updates, utilities, user, SSH, cron) | [README](./00-system/README.md) |
 | **01-security** | Security hardening (firewall, fail2ban, port-knocking, apparmor, sysctl, grub, rootkit detection, auditing) | [README](./01-security/README.md) |
-| **02-network** | Networking & VPN (WireGuard, NTP, Cloudflare Tunnel) | [README](./02-network/README.md) |
+| **02-network** | Networking & ingress (WireGuard VPN, NTP, nginx reverse proxy, Let's Encrypt via Cloudflare DNS) | [README](./02-network/README.md) |
 | **03-orchestration** | Container orchestration (Docker, k3s, Traefik) | [README](./03-orchestration/README.md) |
 | **04-monitoring** | Performance monitoring (sysstat, process tools, disk monitoring) | [README](./04-monitoring/README.md) |
 | **05-gui** | Web dashboards (NetData, FileBrowser, Homer, Crontab-UI, Gatus) | [README](./05-gui/README.md) |
