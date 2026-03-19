@@ -255,6 +255,33 @@ prompt_for_port() {
   done
 }
 
+# Function to display an interactive numbered menu and capture the user's selection
+# Usage: show_menu "Title" "Option 1" "Option 2" ... "Option N"
+# Example:
+#   show_menu "My Menu" "Do thing A" "Do thing B" "Exit"
+#   case "$MENU_CHOICE" in 1) ... ;; 2) ... ;; 3) exit 0 ;; esac
+# Sets MENU_CHOICE to the 1-based index of the selected option.
+show_menu() {
+  local TITLE="$1"
+  shift
+  local OPTIONS=("$@")
+  local COUNT="${#OPTIONS[@]}"
+
+  while true; do
+    echo_newline
+    echo_blue "$TITLE"
+    local i
+    for (( i=0; i<COUNT; i++ )); do
+      echo "$((i+1))) ${OPTIONS[$i]}"
+    done
+    read_from_terminal -rp "Choose an option [1-$COUNT]: " MENU_CHOICE
+    if [[ "$MENU_CHOICE" =~ ^[0-9]+$ ]] && (( MENU_CHOICE >= 1 && MENU_CHOICE <= COUNT )); then
+      return 0
+    fi
+    echo_red "Invalid choice. Please enter a number between 1 and $COUNT."
+  done
+}
+
 # Function to print script name and description in color
 # Usage: print_script_header
 # Example:
@@ -470,6 +497,17 @@ ensure_directory() {
   fi
 
   chmod "$PERMS" "$DIR_PATH"
+}
+
+# Function to get the primary WAN (public-facing) IPv4 address
+# Usage: WAN_IP=$(get_wan_ip)
+# Example:
+#   WAN_IP=$(get_wan_ip)
+# Returns:
+#   Prints the IP of the interface used to reach the internet, or empty string on failure
+get_wan_ip() {
+  ip route get 8.8.8.8 2>/dev/null \
+    | awk 'NR==1 { for(i=1;i<=NF;i++) if($i=="src") { print $(i+1); exit } }'
 }
 
 # Function to get the IPv4 address of the WireGuard interface (wg0)
