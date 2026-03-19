@@ -190,17 +190,13 @@ remove_user() {
 }
 
 while true; do
-  echo_newline
-  echo_blue "User Management Menu"
-  echo "1) Add a new user"
-  echo "2) Remove an existing user"
-  echo "3) Exit"
-  read_from_terminal -rp "Choose an option [1-3]: " CHOICE
-
-  case "$CHOICE" in
+  show_menu "User Management" \
+    "Add a new user" \
+    "Remove an existing user" \
+    "Exit"
+  case "$MENU_CHOICE" in
     1) add_user ;;
     2) remove_user ;;
     3) echo_green "Exiting."; exit 0 ;;
-    *) echo_red "Invalid choice. Try again." ;;
   esac
 done

@@ -230,19 +230,15 @@ remove_client() {
 }
 
 while true; do
-  echo_newline
-  echo_blue "WireGuard Management Menu"
-  echo "1) Install WireGuard server"
-  echo "2) Add a new client"
-  echo "3) Remove an existing client"
-  echo "4) Exit"
-  read_from_terminal -rp "Choose an option [1-4]: " CHOICE
-
-  case "$CHOICE" in
+  show_menu "WireGuard Management" \
+    "Install WireGuard server" \
+    "Add a new client" \
+    "Remove an existing client" \
+    "Exit"
+  case "$MENU_CHOICE" in
     1) install_wireguard ;;
     2) add_client ;;
     3) remove_client ;;
     4) echo_green "Exiting."; exit 0 ;;
-    *) echo_red "Invalid choice. Try again." ;;
   esac
 done
