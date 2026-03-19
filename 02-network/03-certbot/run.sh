@@ -139,6 +139,62 @@ list_certificates() {
     "$CERTBOT_IMAGE" certificates
 }
 
+revoke_certificate() {
+  echo_newline
+  echo_blue "Revoke and delete a certificate"
+
+  if [[ ! -f "$CLOUDFLARE_CREDS" ]]; then
+    echo_red "Certbot is not configured. Run 'Install Certbot' first."
+    return
+  fi
+
+  if [[ ! -d "$LETSENCRYPT_DIR/live" ]]; then
+    echo_yellow "No certificates found in $LETSENCRYPT_DIR/live"
+    return
+  fi
+
+  echo_yellow "Available certificates:"
+  echo_newline
+  for cert_dir in "$LETSENCRYPT_DIR/live"/*/; do
+    [[ -d "$cert_dir" ]] || continue
+    echo_blue "  $(basename "$cert_dir")"
+  done
+  echo_newline
+
+  while true; do
+    read_from_terminal -rp "Enter the domain name to revoke (e.g. example.com): " DOMAIN
+    [[ -n "$DOMAIN" ]] && break
+    echo_red "Domain cannot be empty."
+  done
+
+  local CERT_PATH="/etc/letsencrypt/live/$DOMAIN/cert.pem"
+
+  if [[ ! -f "$LETSENCRYPT_DIR/live/$DOMAIN/cert.pem" ]]; then
+    echo_red "No certificate found for $DOMAIN"
+    return
+  fi
+
+  echo_newline
+  echo_red "WARNING: This will revoke and permanently delete the certificate for $DOMAIN."
+  prompt_yes_no "Are you sure you want to continue?" "N"
+  if [[ "$REPLY" != "Y" ]]; then
+    echo_yellow "Aborted."
+    return
+  fi
+
+  echo_yellow "Revoking certificate for $DOMAIN..."
+
+  docker run --rm \
+    -v "$LETSENCRYPT_DIR:/etc/letsencrypt" \
+    -v "$LIB_DIR:/var/lib/letsencrypt" \
+    "$CERTBOT_IMAGE" revoke \
+    --cert-path "$CERT_PATH" \
+    --delete-after-revoke \
+    --non-interactive
+
+  echo_green "Certificate for $DOMAIN has been revoked and deleted."
+}
+
 renew_now() {
   echo_newline
   echo_blue "Renewing all certificates now"
@@ -169,12 +225,14 @@ while true; do
     "Add domain / issue certificate" \
     "List certificates and expiry" \
     "Renew certificates now" \
+    "Revoke and delete a certificate" \
     "Exit"
   case "$MENU_CHOICE" in
     1) install_certbot ;;
     2) add_domain ;;
     3) list_certificates ;;
     4) renew_now ;;
-    5) echo_green "Exiting."; exit 0 ;;
+    5) revoke_certificate ;;
+    6) echo_green "Exiting."; exit 0 ;;
   esac
 done
