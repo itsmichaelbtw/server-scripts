@@ -25,14 +25,14 @@ echo_deploying_container "$CONTAINER_NAME" "$CONTAINER_PORT"
 configure_ufw_for_wireguard "$CONTAINER_PORT" tcp
 
 ensure_directory "$GRAFANA_DATA_DIR" 755
+chown -R 472:472 "$GRAFANA_DATA_DIR"
 
-docker volume create grafana-storage
 docker run -d \
   --name="$CONTAINER_NAME" \
   --network="$DOCKER_NETWORK_NAME" \
   --restart=unless-stopped \
   -p "$CONTAINER_PORT:3000" \
-  -v grafana-storage:/var/lib/grafana \
+  -v "$GRAFANA_DATA_DIR:/var/lib/grafana" \
   -e GF_AUTH_ANONYMOUS_ENABLED=true \
   -e GF_AUTH_ANONYMOUS_ORG_ROLE=Admin \
   -e GF_SECURITY_ADMIN_USER=admin \

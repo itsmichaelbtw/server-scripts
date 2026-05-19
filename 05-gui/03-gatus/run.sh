@@ -14,6 +14,7 @@ CONTAINER_PORT="$GATUS_PORT"
 CONFIG_DIR="/etc/gatus"
 CONFIG_FILE="$CONFIG_DIR/config.yaml"
 TEMPLATE_FILE="$SCRIPT_DIR/config.yaml"
+GATUS_DATA_DIR="/var/lib/gatus"
 
 print_script_header
 validate_environment
@@ -26,6 +27,7 @@ configure_ufw_for_wireguard "$CONTAINER_PORT" tcp
 
 ensure_directory "$CONFIG_DIR" 755
 render_template_config "$TEMPLATE_FILE" "$CONFIG_FILE" 644
+ensure_directory "$GATUS_DATA_DIR" 755
 
 docker run -d \
   --name="$CONTAINER_NAME" \
@@ -33,13 +35,15 @@ docker run -d \
   --restart=unless-stopped \
   -p "$CONTAINER_PORT:8080" \
   -v "$CONFIG_FILE:/config/config.yaml:ro" \
-  -v gatus_data:/data \
+  -v "$GATUS_DATA_DIR:/data" \
   ghcr.io/twin/gatus:stable
 
 sleep 3
 
 if verify_container_is_running "$CONTAINER_NAME"; then
   echo_green "$CONTAINER_NAME container is running"
+  echo_blue "Configuration: $CONFIG_FILE"
+  echo_blue "Data directory: $GATUS_DATA_DIR"
   echo_blue "Access at: http://localhost:$CONTAINER_PORT"
   exit 0
 else
