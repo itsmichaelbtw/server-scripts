@@ -32,6 +32,7 @@ docker run -d \
   -p "$CONTAINER_PORT:80" \
   -v "$FILE_DIR:/srv" \
   -v /var/log:/srv/log:ro \
+  -v /var/backups:/srv/backups:ro \
   -v filebrowser_config:/config \
   --user 0:0 \
   -e PUID=0 \
