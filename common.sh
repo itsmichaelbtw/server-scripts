@@ -11,6 +11,7 @@ RED="\033[1;31m"
 RESET="\033[0m"
 
 DOCKER_NETWORK_NAME="server_network"
+CONFIG_BACKUP_DIR="/var/backups/server-scripts"
 
 # Function to print a newline
 # Usage: echo_newline
@@ -441,17 +442,34 @@ execute_run_sh() {
   echo_green "All done."
 }
 
-# Function to backup a config file if it exists
+# Function to backup a config file into the central backup directory
 # Usage: backup_config_file "/etc/ssh/sshd_config"
 # Example:
 #   backup_config_file "/etc/ssh/sshd_config"
+# Notes:
+#   - All backups go to $CONFIG_BACKUP_DIR (/var/backups/server-scripts)
+#   - Filename encodes the original path, e.g. etc-ssh-sshd_config-20260519-120000
 backup_config_file() {
   local TARGET_FILE="$1"
   if [[ -f "$TARGET_FILE" ]]; then
-    local BACKUP_FILE="${TARGET_FILE}.backup-$(date +%Y%m%d-%H%M%S)"
+    mkdir -p "$CONFIG_BACKUP_DIR"
+    local SAFE_NAME
+    SAFE_NAME=$(echo "$TARGET_FILE" | sed 's|^/||; s|/|-|g')
+    local BACKUP_FILE="$CONFIG_BACKUP_DIR/${SAFE_NAME}-$(date +%Y%m%d-%H%M%S)"
     cp "$TARGET_FILE" "$BACKUP_FILE"
     echo_green "Backup created at: $BACKUP_FILE"
   fi
+}
+
+# Return the most recent centralized backup path for a given config file
+# Usage: BACKUP=$(get_latest_config_backup "/etc/ssh/sshd_config")
+# Example:
+#   BACKUP=$(get_latest_config_backup "$DROPIN_FILE")
+get_latest_config_backup() {
+  local TARGET_FILE="$1"
+  local SAFE_NAME
+  SAFE_NAME=$(echo "$TARGET_FILE" | sed 's|^/||; s|/|-|g')
+  ls -t "$CONFIG_BACKUP_DIR/${SAFE_NAME}-"* 2>/dev/null | head -1 || true
 }
 
 # Function to validate a config file and clean up temp files
@@ -705,6 +723,23 @@ remove_docker_container() {
     docker rm "$CONTAINER_NAME" >/dev/null 2>&1 || true
   else
     echo_yellow "Container '$CONTAINER_NAME' does not exist"
+  fi
+}
+
+# Function to stop a running Docker container (no-op if not running)
+# Usage: stop_docker_container "container_name"
+# Example:
+#   stop_docker_container "vaultwarden"
+# Sets CONTAINER_WAS_RUNNING=true if the container was running before stopping
+stop_docker_container() {
+  local CONTAINER_NAME="$1"
+  CONTAINER_WAS_RUNNING=false
+
+  if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^${CONTAINER_NAME}$"; then
+    CONTAINER_WAS_RUNNING=true
+    echo_yellow "Stopping $CONTAINER_NAME..."
+    docker stop "$CONTAINER_NAME" >/dev/null
+    echo_green "$CONTAINER_NAME stopped."
   fi
 }
 
