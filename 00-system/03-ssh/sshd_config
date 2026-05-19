@@ -15,8 +15,8 @@ AllowAgentForwarding yes
 AllowTcpForwarding no
 
 TCPKeepAlive yes
-ClientAliveInterval 300
-ClientAliveCountMax 2
+ClientAliveInterval 30
+ClientAliveCountMax 5
 
 MaxAuthTries 6
 LoginGraceTime 20

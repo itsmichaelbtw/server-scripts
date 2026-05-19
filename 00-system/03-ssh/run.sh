@@ -69,7 +69,7 @@ echo_yellow "Validating SSH configuration..."
 mkdir -p /run/sshd
 if ! sshd -t 2>&1; then
   echo_red "SSH config validation failed. Restoring backup..."
-  BACKUP=$(ls -t "${DROPIN_FILE}".backup-* 2>/dev/null | head -1 || true)
+  BACKUP=$(get_latest_config_backup "$DROPIN_FILE")
   if [[ -n "$BACKUP" ]]; then
     cp "$BACKUP" "$DROPIN_FILE"
     echo_yellow "Backup restored from: $BACKUP"
