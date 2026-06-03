@@ -50,6 +50,18 @@ echo_yellow "Configuring Docker log rotation..."
 render_template_config "$SCRIPT_DIR/daemon.json" "/etc/docker/daemon.json" 644
 systemctl restart docker
 
+echo_yellow "Ensuring Docker starts after WireGuard (for WG_IP-bound containers)..."
+mkdir -p /etc/systemd/system/docker.service.d
+cat > /etc/systemd/system/docker.service.d/99-wireguard.conf <<'EOF'
+# Ensure WireGuard interface is up before Docker attempts to start
+# containers bound to WireGuard IPs (e.g. -p WG_IP:HOST_PORT:CONTAINER_PORT).
+# Using After= (not Requires=) so Docker still starts if WireGuard is disabled.
+[Unit]
+After=wg-quick@wg0.service
+EOF
+systemctl daemon-reload
+echo_green "Systemd drop-in created: /etc/systemd/system/docker.service.d/99-wireguard.conf"
+
 echo_yellow "Enabling and starting Docker service..."
 systemctl enable docker
 

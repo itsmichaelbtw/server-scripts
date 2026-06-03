@@ -566,6 +566,13 @@ get_wireguard_subnet() {
 #   - Detects WireGuard subnet automatically
 #   - Always allows localhost access
 #   - Proto defaults to "tcp" if not specified
+#   - IMPORTANT: These rules apply to the INPUT chain (host-local services).
+#     For Docker containers, forwarded traffic never hits INPUT; bind the
+#     container to the WireGuard IP (e.g. -p WG_IP:PORT:80) to restrict access.
+#     The after.rules DOCKER-USER hook ensures ufw-user-forward (route rules)
+#     is evaluated for Docker traffic, but port matching happens against the
+#     DNATted *container* port, not the host port, making per-host-port rules
+#     unreliable for Docker-published ports.
 configure_ufw_for_wireguard() {
   local PORT="$1"
   local PROTO="${2:-tcp}"
