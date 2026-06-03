@@ -32,6 +32,14 @@ deploy_vaultwarden() {
   echo_deploying_container "$CONTAINER_NAME" "$CONTAINER_PORT"
   configure_ufw_for_wireguard "$CONTAINER_PORT" tcp
 
+  local WG_IP
+  WG_IP=$(get_wireguard_ip)
+  if [[ -z "$WG_IP" ]]; then
+    echo_red "WireGuard interface wg0 is not active. Start WireGuard before deploying Vaultwarden."
+    exit 1
+  fi
+  echo_green "Detected WireGuard IP: $WG_IP"
+
   ensure_directory "$VAULTWARDEN_DATA_DIR" 700
 
   SSL_DIR="$VAULTWARDEN_DATA_DIR/ssl"
@@ -49,7 +57,7 @@ deploy_vaultwarden() {
     --name="$CONTAINER_NAME" \
     --network="$DOCKER_NETWORK_NAME" \
     --restart=unless-stopped \
-    -p "$CONTAINER_PORT:80" \
+    -p "$WG_IP:$CONTAINER_PORT:80" \
     -v "$VAULTWARDEN_DATA_DIR:/data/" \
     -v "$SSL_DIR:/ssl" \
     -e ADMIN_TOKEN="$ADMIN_TOKEN" \
