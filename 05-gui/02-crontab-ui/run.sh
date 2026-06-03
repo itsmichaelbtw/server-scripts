@@ -18,6 +18,8 @@ validate_environment
 ensure_docker
 ensure_docker_network
 
+WG_IP=$(get_required_wireguard_ip)
+
 remove_docker_container "$CONTAINER_NAME"
 echo_deploying_container "$CONTAINER_NAME" "$CONTAINER_PORT"
 configure_ufw_for_wireguard "$CONTAINER_PORT" tcp
@@ -32,7 +34,7 @@ docker run -d \
   --name="$CONTAINER_NAME" \
   --network="$DOCKER_NETWORK_NAME" \
   --restart=unless-stopped \
-  -p "$CONTAINER_PORT:8000" \
+  -p "$WG_IP:$CONTAINER_PORT:8000" \
   -v "$CRON_SYSTEM_DIR:/crontab-ui/crontabs" \
   alseambusher/crontab-ui
 

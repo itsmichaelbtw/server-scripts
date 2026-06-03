@@ -33,12 +33,7 @@ deploy_vaultwarden() {
   configure_ufw_for_wireguard "$CONTAINER_PORT" tcp
 
   local WG_IP
-  WG_IP=$(get_wireguard_ip)
-  if [[ -z "$WG_IP" ]]; then
-    echo_red "WireGuard interface wg0 is not active. Start WireGuard before deploying Vaultwarden."
-    exit 1
-  fi
-  echo_green "Detected WireGuard IP: $WG_IP"
+  WG_IP=$(get_required_wireguard_ip)
 
   ensure_directory "$VAULTWARDEN_DATA_DIR" 700
 

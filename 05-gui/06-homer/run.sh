@@ -25,12 +25,7 @@ remove_docker_container "$CONTAINER_NAME"
 echo_deploying_container "$CONTAINER_NAME" "$CONTAINER_PORT"
 configure_ufw_for_wireguard "$CONTAINER_PORT" tcp
 
-WG_IP=$(get_wireguard_ip)
-if [[ -z "$WG_IP" ]]; then
-  echo_red "WireGuard interface wg0 is not active. Start WireGuard before deploying Homer."
-  exit 1
-fi
-echo_green "Detected WireGuard IP: $WG_IP"
+WG_IP=$(get_required_wireguard_ip)
 
 echo_yellow "Preparing Homer assets directory..."
 mkdir -p "$ASSETS_DIR"

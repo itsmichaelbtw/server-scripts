@@ -21,6 +21,8 @@ validate_environment
 ensure_docker
 ensure_docker_network
 
+WG_IP=$(get_required_wireguard_ip)
+
 remove_docker_container "$CONTAINER_NAME"
 echo_deploying_container "$CONTAINER_NAME" "$CONTAINER_PORT"
 configure_ufw_for_wireguard "$CONTAINER_PORT" tcp
@@ -29,8 +31,7 @@ docker volume create portainer_data
 docker run -d \
   --name="$CONTAINER_NAME" \
   --restart=always \
-  -p 8000:8000 \
-  -p "$CONTAINER_PORT:9443" \
+  -p "$WG_IP:$CONTAINER_PORT:9443" \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v portainer_data:/data \
   portainer/portainer-ce:"$PORTAINER_VERSION"

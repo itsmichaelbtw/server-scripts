@@ -21,12 +21,7 @@ remove_docker_container "$CONTAINER_NAME"
 echo_deploying_container "$CONTAINER_NAME" "$CONTAINER_PORT"
 configure_ufw_for_wireguard "$CONTAINER_PORT" tcp
 
-WG_IP=$(get_wireguard_ip)
-if [[ -z "$WG_IP" ]]; then
-  echo_red "WireGuard interface wg0 is not active. Start WireGuard before deploying FileBrowser."
-  exit 1
-fi
-echo_green "Detected WireGuard IP: $WG_IP"
+WG_IP=$(get_required_wireguard_ip)
 
 read_from_terminal -rp "Enter host directory to serve for personal files (default: /srv/files): " FILE_DIR
 FILE_DIR="${FILE_DIR:-/srv/files}"
