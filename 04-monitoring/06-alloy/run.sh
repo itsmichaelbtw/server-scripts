@@ -21,6 +21,8 @@ validate_environment
 ensure_docker
 ensure_docker_network
 
+WG_IP=$(get_required_wireguard_ip)
+
 remove_docker_container "$CONTAINER_NAME"
 echo_deploying_container "$CONTAINER_NAME" "$CONTAINER_PORT"
 configure_ufw_for_wireguard "$CONTAINER_PORT" tcp
@@ -33,9 +35,9 @@ docker run -d \
   --network="$DOCKER_NETWORK_NAME" \
   --restart=unless-stopped \
   --privileged \
-  -p "$CONTAINER_PORT:12345" \
-  -p 51893:51893/tcp \
-  -p 51898:51898/udp \
+  -p "$WG_IP:$CONTAINER_PORT:12345" \
+  -p "$WG_IP:51893:51893/tcp" \
+  -p "$WG_IP:51898:51898/udp" \
   -v "$CONFIG_FILE":/etc/alloy/config.alloy:ro \
   -v /etc/machine-id:/etc/machine-id:ro \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \

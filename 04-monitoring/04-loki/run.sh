@@ -34,6 +34,8 @@ if [ ! -f "$LOKI_CONFIG" ]; then
   echo_green "Downloaded loki-config.yaml"
 fi
 
+WG_IP=$(get_required_wireguard_ip)
+
 remove_docker_container "$CONTAINER_NAME"
 echo_deploying_container "$CONTAINER_NAME" "$CONTAINER_PORT"
 configure_ufw_for_wireguard "$CONTAINER_PORT" tcp
@@ -42,7 +44,7 @@ docker run -d \
   --name="$CONTAINER_NAME" \
   --network="$DOCKER_NETWORK_NAME" \
   --restart=unless-stopped \
-  -p "$CONTAINER_PORT:3100" \
+  -p "$WG_IP:$CONTAINER_PORT:3100" \
   -v "$LOKI_CONFIG":/mnt/config/loki-config.yaml:ro \
   -v "$LOKI_DATA_DIR":/loki \
   grafana/loki:"$LOKI_VERSION" \
