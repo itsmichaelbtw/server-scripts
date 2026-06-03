@@ -82,12 +82,60 @@ if does_cmd_exist "ufw" 2>/dev/null; then
     echo_red "Template UFW rules file not found at: $TEMPLATE_RULES_FILE"
     echo_yellow "Skipping UFW-Docker fix. Please ensure after.rules exists in the script directory."
   else
+    # Detect WireGuard subnet for template substitution
+    WG_SUBNET=""
+    if ip link show "wg0" &>/dev/null; then
+      WG_SUBNET=$(get_wireguard_subnet)
+    fi
+
+    if [[ -z "$WG_SUBNET" ]]; then
+      echo_yellow "WireGuard not active — using placeholder {{WG_SUBNET}} in after.rules."
+      echo_yellow "Run this script again after WireGuard is up to substitute the real subnet."
+    fi
+
     if ! grep -q "BEGIN UFW AND DOCKER" "$AFTER_RULES_FILE" 2>/dev/null; then
       echo_yellow "Appending UFW-Docker rules from template..."
-      cat "$TEMPLATE_RULES_FILE" >> "$AFTER_RULES_FILE"
+      if [[ -n "$WG_SUBNET" ]]; then
+        render_template_config "$TEMPLATE_RULES_FILE" "$AFTER_RULES_FILE" 644 \
+          -e "s|{{WG_SUBNET}}|$WG_SUBNET|g"
+      else
+        render_template_config "$TEMPLATE_RULES_FILE" "$AFTER_RULES_FILE" 644
+      fi
       echo_green "UFW-Docker rules added to $AFTER_RULES_FILE"
     else
-      echo_yellow "UFW-Docker rules already present, skipping..."
+      NEEDS_UPDATE=false
+
+      # Check if the old overly-permissive blanket RETURN rules exist
+      if grep -qE 'DOCKER-USER.*RETURN.*-s\s+(10\.0\.0\.0/8|172\.16\.0\.0/12|192\.168\.0\.0/16)' "$AFTER_RULES_FILE" 2>/dev/null; then
+        echo_yellow "Detected old blanket private-range RETURN rules in $AFTER_RULES_FILE."
+        NEEDS_UPDATE=true
+      fi
+
+      # Check if the custom bridge inter-container rule is missing
+      if ! grep -q 'br-\+' "$AFTER_RULES_FILE" 2>/dev/null; then
+        echo_yellow "Detected missing custom-bridge inter-container rule in $AFTER_RULES_FILE."
+        NEEDS_UPDATE=true
+      fi
+
+      if [[ "$NEEDS_UPDATE" == "true" ]]; then
+        prompt_yes_no "Update after.rules to the latest template?" "Y"
+        if [[ "$REPLY" == "Y" ]]; then
+          backup_config_file "$AFTER_RULES_FILE"
+          # Remove the old UFW-Docker block and re-append with updated template
+          sed -i '/# BEGIN UFW AND DOCKER/,/# END UFW AND DOCKER/d' "$AFTER_RULES_FILE"
+          if [[ -n "$WG_SUBNET" ]]; then
+            render_template_config "$TEMPLATE_RULES_FILE" "$AFTER_RULES_FILE" 644 \
+              -e "s|{{WG_SUBNET}}|$WG_SUBNET|g"
+          else
+            render_template_config "$TEMPLATE_RULES_FILE" "$AFTER_RULES_FILE" 644
+          fi
+          echo_green "Updated $AFTER_RULES_FILE with the latest UFW-Docker rules."
+        else
+          echo_yellow "Keeping existing rules. Review manually if needed."
+        fi
+      else
+        echo_yellow "UFW-Docker rules already present and up to date, skipping..."
+      fi
     fi
   fi
 
