@@ -1,0 +1,12 @@
+# .copyignore — Patterns excluded from rsync during copy.sh
+#
+# Add file/directory patterns here to prevent copy.sh from overwriting
+# server-side edits. Patterns follow rsync exclude rules:
+#   - Use relative paths from repo root
+#   - Example: 05-gui/06-homer/config.yml
+#
+# Common candidates (uncomment as needed):
+# 05-gui/06-homer/config.yml
+# 05-gui/03-gatus/config.yaml
+# 04-monitoring/06-alloy/config.alloy
+# 00-system/03-ssh/sshd_config

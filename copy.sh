@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # File path: copy.sh
-# Purpose: Copy server scripts to a remote system using SCP
+# Purpose: Copy server scripts to a remote system using rsync, preserving server-side edits.
 
 set -euo pipefail
 
@@ -9,7 +9,7 @@ ROOT_DIR=$(realpath "$SCRIPT_DIR")
 source "$ROOT_DIR/common.sh"
 
 SCRIPT_NAME="copy"
-SCRIPT_DESC="Dynamically copy all server scripts to a remote server with verbose troubleshooting"
+SCRIPT_DESC="Dynamically copy all server scripts to a remote server with rsync, preserving server-side edits"
 
 print_script_header
 
@@ -54,6 +54,23 @@ find "$SOURCE_DIR" -maxdepth 1 -mindepth 1 \
     echo "  - $(basename "$item")"
 done
 
+echo_blue "Ignored files/patterns (will NOT be copied/overwritten):"
+echo "  - .git"
+echo "  - .env"
+echo "  - .env.example"
+echo "  - .github"
+echo "  - .gitignore"
+echo "  - .copyignore.example"
+echo "  - LICENSE"
+
+if [[ -f "$SOURCE_DIR/.copyignore" ]]; then
+  echo "  - (patterns from .copyignore):"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    [[ "$line" =~ ^[[:space:]]*$ ]] || [[ "$line" =~ ^# ]] && continue
+    echo "      $line"
+  done < "$SOURCE_DIR/.copyignore"
+fi
+
 prompt_yes_no "Proceed with file transfer?" "Y"
 if [[ "$REPLY" == "N" ]]; then
   echo_yellow "Operation cancelled by user."
@@ -63,29 +80,36 @@ fi
 ssh_open_session "$SSH_USER" "$SERVER_IP" "$SSH_PORT"
 trap ssh_close_session EXIT
 
-echo_yellow "\nCreating remote directory structure..."
+echo_yellow "\nEnsuring remote directory exists..."
 ssh_run "mkdir -p $REMOTE_DIR"
-echo_green "Created remote directory"
+echo_green "Remote directory ready"
 
-echo_yellow "Copying files to remote server..."
+require_cmd "rsync" "rsync"
 
-rm -f transfer.tar.gz
-tar -czvf transfer.tar.gz \
+echo_yellow "Syncing files to remote server with rsync..."
+
+RSYNC_OPTS=(-avz --delete \
   --exclude='.git' \
   --exclude='.env' \
   --exclude='.env.example' \
   --exclude='.github' \
   --exclude='.gitignore' \
+  --exclude='.copyignore.example' \
   --exclude='LICENSE' \
-  --exclude='transfer.tar.gz' \
-  .
+  --backup \
+  --backup-dir=".copy-backups-$(date +%Y%m%d-%H%M%S)" \
+)
 
-scp_put transfer.tar.gz "$REMOTE_DIR/transfer.tar.gz"
-ssh_run "cd $REMOTE_DIR && tar -xzvf transfer.tar.gz && rm transfer.tar.gz"
+if [[ -f "$SOURCE_DIR/.copyignore" ]]; then
+  RSYNC_OPTS+=(--exclude-from="$SOURCE_DIR/.copyignore")
+  echo_blue "Using .copyignore exclusions from $SOURCE_DIR/.copyignore"
+fi
 
-rm transfer.tar.gz
+rsync "${RSYNC_OPTS[@]}" \
+  -e "ssh -S $_SSH_CTL_PATH -p $_SSH_CTL_PORT" \
+  "$SOURCE_DIR/" "${SSH_USER}@${SERVER_IP}:${REMOTE_DIR}/"
 
-echo_green "Server scripts successfully copied to ${SSH_USER}@${SERVER_IP}:${REMOTE_DIR}"
+echo_green "Server scripts successfully synced to ${SSH_USER}@${SERVER_IP}:${REMOTE_DIR}"
 
 prompt_yes_no "Make scripts executable on remote system?" "Y"
 if [[ "$REPLY" == "Y" ]]; then

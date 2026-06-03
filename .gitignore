@@ -8,6 +8,9 @@
 *.tmp
 transfer.tar.gz
 
+# Local copy exclusions (created from .copyignore.example)
+.copyignore
+
 # IDE
 .vscode/
 .idea/
