@@ -542,6 +542,23 @@ get_wireguard_ip() {
   ip -4 addr show "wg0" 2>/dev/null | grep -oP 'inet \K[\d.]+' | head -1 || true
 }
 
+# Retrieves the WireGuard IP and exits with an error if WireGuard is not active.
+# Usage: get_required_wireguard_ip
+# Example:
+#   WG_IP=$(get_required_wireguard_ip)
+# Returns:
+#   Prints the IP address to stdout. Exits the script with an error if wg0 is down.
+get_required_wireguard_ip() {
+  local WG_IP
+  WG_IP=$(get_wireguard_ip)
+  if [[ -z "$WG_IP" ]]; then
+    echo_red "WireGuard interface wg0 is not active. Start WireGuard before deploying this container."
+    exit 1
+  fi
+  echo_green "Detected WireGuard IP: $WG_IP" >&2
+  echo "$WG_IP"
+}
+
 # Function to get the IPv4 subnet (with CIDR) of the WireGuard interface (wg0)
 # Usage: get_wireguard_subnet
 # Example:
@@ -566,13 +583,10 @@ get_wireguard_subnet() {
 #   - Detects WireGuard subnet automatically
 #   - Always allows localhost access
 #   - Proto defaults to "tcp" if not specified
-#   - IMPORTANT: These rules apply to the INPUT chain (host-local services).
-#     For Docker containers, forwarded traffic never hits INPUT; bind the
-#     container to the WireGuard IP (e.g. -p WG_IP:PORT:80) to restrict access.
-#     The after.rules DOCKER-USER hook ensures ufw-user-forward (route rules)
-#     is evaluated for Docker traffic, but port matching happens against the
-#     DNATted *container* port, not the host port, making per-host-port rules
-#     unreliable for Docker-published ports.
+#   - Uses "ufw route allow" so rules land in ufw-user-forward (FORWARD chain),
+#     which is evaluated by the after.rules DOCKER-USER hook for Docker traffic.
+#     This is the correct chain for forwarded container traffic.
+#   - For host-local services, "ufw allow" (INPUT chain) is still used for localhost.
 configure_ufw_for_wireguard() {
   local PORT="$1"
   local PROTO="${2:-tcp}"
@@ -581,7 +595,7 @@ configure_ufw_for_wireguard() {
     return 0
   fi
   
-  # Allow localhost access (always)
+  # Allow localhost access (always) — host-local traffic hits INPUT
   if ufw allow from 127.0.0.1 to any port "$PORT" proto "$PROTO" 2>/dev/null; then
     echo_green "UFW: Allowed $PROTO/$PORT from localhost (127.0.0.1)"
   fi
@@ -606,10 +620,12 @@ configure_ufw_for_wireguard() {
     return 0
   fi
   
-  if ufw allow from "$WG_SUBNET" to any port "$PORT" proto "$PROTO" 2>/dev/null; then
-    echo_green "UFW: Allowed $PROTO/$PORT from WireGuard subnet ($WG_SUBNET)"
+  # Use "route allow" so the rule lands in ufw-user-forward (FORWARD chain),
+  # which is evaluated by the after.rules DOCKER-USER hook for Docker traffic.
+  if ufw route allow from "$WG_SUBNET" to any port "$PORT" proto "$PROTO" 2>/dev/null; then
+    echo_green "UFW: Allowed $PROTO/$PORT from WireGuard subnet ($WG_SUBNET) via route"
   else
-    echo_yellow "UFW rule may already exist or failed to add"
+    echo_yellow "UFW route rule may already exist or failed to add"
   fi
   
   ufw reload 2>/dev/null || true
